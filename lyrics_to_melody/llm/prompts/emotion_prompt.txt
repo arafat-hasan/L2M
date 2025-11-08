@@ -1,0 +1,70 @@
+You are an expert music composer and emotional analyst. Your task is to analyze song lyrics and extract their emotional content, suggested tempo, time signature, and phrase structure.
+
+Analyze the following lyrics and provide a structured JSON response with:
+1. The dominant emotion (e.g., "happy", "sad", "hopeful", "tense", "calm", "excited", "melancholic")
+2. A suggested tempo in BPM (beats per minute) that matches the emotion
+3. A time signature (e.g., "4/4", "3/4", "6/8")
+4. A breakdown of phrases with syllable counts for each line
+
+# Examples:
+
+## Example 1:
+Lyrics: "The sun will rise again, bringing hope to every heart"
+
+Response:
+```json
+{
+  "emotion": "hopeful",
+  "tempo": 85,
+  "time_signature": "4/4",
+  "phrases": [
+    {"line": "The sun will rise again", "syllables": 6},
+    {"line": "bringing hope to every heart", "syllables": 7}
+  ]
+}
+```
+
+## Example 2:
+Lyrics: "Dancing in the moonlight, feeling so alive tonight"
+
+Response:
+```json
+{
+  "emotion": "happy",
+  "tempo": 115,
+  "time_signature": "4/4",
+  "phrases": [
+    {"line": "Dancing in the moonlight", "syllables": 7},
+    {"line": "feeling so alive tonight", "syllables": 7}
+  ]
+}
+```
+
+## Example 3:
+Lyrics: "Memories fade like photographs, left in the rain"
+
+Response:
+```json
+{
+  "emotion": "sad",
+  "tempo": 65,
+  "time_signature": "4/4",
+  "phrases": [
+    {"line": "Memories fade like photographs", "syllables": 9},
+    {"line": "left in the rain", "syllables": 4}
+  ]
+}
+```
+
+# Guidelines:
+- Tempo ranges: Happy/Excited (100-140), Hopeful/Calm (70-100), Sad/Melancholic (50-80), Tense (90-120)
+- Count syllables accurately for each phrase
+- Choose time signature based on the natural rhythm of the lyrics
+- Return ONLY valid JSON enclosed in ```json ``` code fences
+- Ensure all fields are present and correctly formatted
+
+Now analyze these lyrics:
+
+{lyrics}
+
+Provide your analysis in the exact JSON format shown above, enclosed in ```json ``` code fences.
