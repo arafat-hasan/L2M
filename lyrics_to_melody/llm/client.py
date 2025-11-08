@@ -29,6 +29,8 @@ from lyrics_to_melody.models.melody_structure import (
     MelodyStructureResponse,
 )
 from lyrics_to_melody.utils.logger import get_logger
+from lyrics_to_melody.utils.progress import progress
+from lyrics_to_melody import exceptions
 
 logger = get_logger(__name__)
 
@@ -128,7 +130,7 @@ class LLMClient:
         self.api_key = api_key or config.OPENAI_API_KEY
 
         if not self.api_key:
-            raise ValueError("OpenAI API key not provided and not found in config")
+            raise exceptions.InvalidAPIKeyError()
 
         self.client = OpenAI(api_key=self.api_key)
         self.model = config.MODEL_NAME
@@ -153,7 +155,10 @@ class LLMClient:
         template_path = config.PROMPTS_DIR / template_name
 
         if not template_path.exists():
-            raise FileNotFoundError(f"Prompt template not found: {template_path}")
+            raise exceptions.FileReadError(
+                str(template_path),
+                f"Prompt template not found: {template_path}"
+            )
 
         return template_path.read_text(encoding='utf-8')
 
@@ -187,32 +192,37 @@ class LLMClient:
 
         # Validate response structure
         if not response.choices:
-            raise ValueError(
-                "API returned empty choices array. This may indicate a service issue."
+            raise exceptions.APIResponseError(
+                "API returned empty choices array. This may indicate a service issue.",
+                "No choices in response"
             )
 
         if len(response.choices) == 0:
-            raise ValueError(
-                "API returned zero choices. Expected at least one completion."
+            raise exceptions.APIResponseError(
+                "API returned zero choices. Expected at least one completion.",
+                "Empty choices list"
             )
 
         # Get the content
         message = response.choices[0].message
         if not message:
-            raise ValueError(
-                "API response choice has no message. Response may be malformed."
+            raise exceptions.APIResponseError(
+                "API response choice has no message. Response may be malformed.",
+                "Message is None"
             )
 
         content = message.content
         if content is None:
-            raise ValueError(
+            raise exceptions.APIResponseError(
                 "API returned None content. This may indicate content filtering "
-                "or an incomplete response."
+                "or an incomplete response.",
+                "Content is None"
             )
 
         if not content.strip():
-            raise ValueError(
-                "API returned empty content. The model may not have generated a response."
+            raise exceptions.APIResponseError(
+                "API returned empty content. The model may not have generated a response.",
+                "Empty string response"
             )
 
         logger.debug(f"[LLMClient] Received valid response ({len(content)} chars)")
@@ -236,8 +246,9 @@ class LLMClient:
             template = self._load_prompt_template("emotion_prompt.txt")
             prompt = template.format(lyrics=lyrics)
 
-            # Call LLM (will raise exception if fails)
-            response_text = self._call_llm(prompt)
+            # Call LLM with progress indicator
+            with progress("Analyzing emotions via API..."):
+                response_text = self._call_llm(prompt)
 
             # Parse response
             analysis = EmotionParser.parse(response_text)
@@ -299,8 +310,9 @@ class LLMClient:
                 lyrics=lyrics
             )
 
-            # Call LLM (will raise exception if fails)
-            response_text = self._call_llm(prompt)
+            # Call LLM with progress indicator
+            with progress("Generating melody via API..."):
+                response_text = self._call_llm(prompt)
 
             # Parse response
             structure = MelodyParser.parse(response_text)
