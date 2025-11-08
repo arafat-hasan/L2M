@@ -29,7 +29,24 @@ The system follows a clean, modular architecture with five main stages:
 - Python 3.9 or higher
 - OpenAI API key
 
-### Option 1: Using pip
+### Option 1: Install as Package (Recommended)
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd L2M
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
+```
+
+This installs the package and makes the `lyrics-to-melody` command available.
+
+### Option 2: Install Dependencies Only
 
 ```bash
 # Clone the repository
@@ -44,7 +61,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Option 2: Using Poetry
+If you use this option, run the app with `python run.py` instead of the command.
+
+### Option 3: Using Poetry
 
 ```bash
 # Clone the repository
@@ -79,46 +98,62 @@ MAX_TOKENS=1500
 
 ### Basic Usage
 
-Convert lyrics to melody:
+**If installed as package (Option 1):**
 
 ```bash
-python lyrics_to_melody/main.py --lyrics "The sun will rise again"
+lyrics-to-melody --lyrics "The sun will rise again"
+```
+
+**If using run.py (Option 2):**
+
+```bash
+python run.py --lyrics "The sun will rise again"
 ```
 
 This will generate:
-- `output/output.mid` - MIDI file
-- `output/output.musicxml` - MusicXML file
+- `lyrics_to_melody/output/output.mid` - MIDI file
+- `lyrics_to_melody/output/output.musicxml` - MusicXML file
 
 ### Custom Output Name
 
 ```bash
-python lyrics_to_melody/main.py --lyrics "Dancing in the moonlight" --out dance
+# With installed package
+lyrics-to-melody --lyrics "Dancing in the moonlight" --out dance
+
+# Or with run.py
+python run.py --lyrics "Dancing in the moonlight" --out dance
 ```
 
 Generates:
-- `output/dance.mid`
-- `output/dance.musicxml`
+- `lyrics_to_melody/output/dance.mid`
+- `lyrics_to_melody/output/dance.musicxml`
 
 ### Dry Run (Preview Only)
 
 Preview the analysis without generating files:
 
 ```bash
-python lyrics_to_melody/main.py --lyrics "Stars will guide me home" --dry-run
+# With installed package
+lyrics-to-melody --lyrics "Stars will guide me home" --dry-run
+
+# Or with run.py
+python run.py --lyrics "Stars will guide me home" --dry-run
 ```
 
 ### More Examples
 
 ```bash
 # Happy, upbeat lyrics
-python lyrics_to_melody/main.py --lyrics "Sunshine and rainbows fill the sky, dancing together you and I"
+python run.py --lyrics "Sunshine and rainbows fill the sky, dancing together you and I"
 
 # Sad, melancholic lyrics
-python lyrics_to_melody/main.py --lyrics "Memories fade like photographs left in the rain"
+python run.py --lyrics "Memories fade like photographs left in the rain"
 
 # Hopeful lyrics
-python lyrics_to_melody/main.py --lyrics "Tomorrow brings a brand new day, hope will light the way"
+python run.py --lyrics "Tomorrow brings a brand new day, hope will light the way"
 ```
+
+**Note:** Replace `python run.py` with `lyrics-to-melody` if you installed as a package.
 
 ## Project Structure
 
