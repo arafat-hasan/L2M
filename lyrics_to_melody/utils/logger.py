@@ -1,10 +1,12 @@
 """
 Logging utility for the Lyrics-to-Melody system.
 
-Provides centralized logging configuration with file and console output.
+Provides centralized logging configuration with file and console output,
+including log rotation to prevent disk space issues.
 """
 
 import logging
+import logging.handlers
 import sys
 from pathlib import Path
 from typing import Optional
@@ -45,12 +47,40 @@ class Logger:
             datefmt=config.LOG_DATE_FORMAT
         )
 
-        # File handler
+        # Rotating file handler for all logs
+        # Max 10 MB per file, keep 5 backup files (total ~50 MB)
         log_file = config.LOGS_DIR / "system.log"
-        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
+        try:
+            file_handler = logging.handlers.RotatingFileHandler(
+                log_file,
+                maxBytes=10 * 1024 * 1024,  # 10 MB
+                backupCount=5,
+                encoding='utf-8'
+            )
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
+            root_logger.addHandler(file_handler)
+        except (PermissionError, OSError) as e:
+            # If we can't create log file, print warning but continue
+            print(f"WARNING: Cannot create log file {log_file}: {e}", file=sys.stderr)
+            print("Logging will only be available to console.", file=sys.stderr)
+
+        # Separate rotating file handler for errors only
+        # Max 5 MB per file, keep 3 backup files
+        error_log_file = config.LOGS_DIR / "error.log"
+        try:
+            error_handler = logging.handlers.RotatingFileHandler(
+                error_log_file,
+                maxBytes=5 * 1024 * 1024,  # 5 MB
+                backupCount=3,
+                encoding='utf-8'
+            )
+            error_handler.setLevel(logging.ERROR)
+            error_handler.setFormatter(formatter)
+            root_logger.addHandler(error_handler)
+        except (PermissionError, OSError) as e:
+            # Non-critical if error log fails
+            print(f"WARNING: Cannot create error log file {error_log_file}: {e}", file=sys.stderr)
 
         # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
