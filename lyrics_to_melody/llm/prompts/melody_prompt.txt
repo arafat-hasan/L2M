@@ -1,0 +1,100 @@
+You are an expert music composer specializing in melody creation. Your task is to generate a melodic structure that matches the emotional content and syllable pattern of given lyrics.
+
+Based on the emotion analysis and lyrics provided, create a melody with:
+1. An appropriate musical key (major keys for positive emotions, minor keys for negative/tense emotions)
+2. A sequence of notes with durations that align with the syllable count and rhythm
+
+# Emotion-to-Key Mapping:
+- Happy/Joyful/Excited: C major, G major, D major, A major
+- Hopeful/Calm: F major, G major, Bb major
+- Sad/Melancholic: A minor, D minor, E minor
+- Tense/Dark: D minor, B minor, F# minor
+
+# Note Guidelines:
+- Use scientific pitch notation (e.g., C4, D4, E4)
+- Middle C is C4, typical vocal range is C3-C5
+- Duration values: 0.25 (sixteenth), 0.5 (eighth), 1.0 (quarter), 2.0 (half), 4.0 (whole)
+- Match the number of notes to the number of syllables
+- Create natural melodic contours (avoid large jumps)
+
+# Examples:
+
+## Example 1:
+Emotion: hopeful
+Tempo: 85 BPM
+Time Signature: 4/4
+Lyrics: "The sun will rise again" (6 syllables)
+
+Response:
+```json
+{
+  "key": "G major",
+  "melody": [
+    {"note": "G4", "duration": 0.5},
+    {"note": "A4", "duration": 0.5},
+    {"note": "B4", "duration": 1.0},
+    {"note": "C5", "duration": 1.0},
+    {"note": "B4", "duration": 0.5},
+    {"note": "A4", "duration": 1.5}
+  ]
+}
+```
+
+## Example 2:
+Emotion: happy
+Tempo: 115 BPM
+Time Signature: 4/4
+Lyrics: "Dancing in the moonlight" (7 syllables)
+
+Response:
+```json
+{
+  "key": "C major",
+  "melody": [
+    {"note": "C4", "duration": 0.5},
+    {"note": "D4", "duration": 0.5},
+    {"note": "E4", "duration": 0.5},
+    {"note": "G4", "duration": 1.0},
+    {"note": "F4", "duration": 0.5},
+    {"note": "E4", "duration": 0.5},
+    {"note": "D4", "duration": 1.0}
+  ]
+}
+```
+
+## Example 3:
+Emotion: sad
+Tempo: 65 BPM
+Time Signature: 4/4
+Lyrics: "Memories fade away" (5 syllables)
+
+Response:
+```json
+{
+  "key": "A minor",
+  "melody": [
+    {"note": "A4", "duration": 1.0},
+    {"note": "G4", "duration": 1.0},
+    {"note": "F4", "duration": 1.0},
+    {"note": "E4", "duration": 1.0},
+    {"note": "D4", "duration": 2.0}
+  ]
+}
+```
+
+# Your Task:
+
+Emotion: {emotion}
+Tempo: {tempo} BPM
+Time Signature: {time_signature}
+Total Syllables: {total_syllables}
+Lyrics: {lyrics}
+
+Create a melody that:
+- Uses the appropriate key for the emotion
+- Contains exactly {total_syllables} notes (one per syllable)
+- Has natural, singable intervals
+- Follows a melodic contour appropriate for the emotion
+- Uses durations that create musical phrases
+
+Provide your melody in the exact JSON format shown above, enclosed in ```json ``` code fences.

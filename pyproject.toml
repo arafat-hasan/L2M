@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "lyrics-to-melody"
+version = "1.0.0"
+description = "A modular Python system that converts human lyrics into structured melodic output (MIDI/MusicXML)"
+authors = ["AI Developer"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openai = "^1.0.0"
+pydantic = "^2.0.0"
+python-dotenv = "^1.0.0"
+music21 = "^9.1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.0"
+pytest-cov = "^4.0.0"
+black = "^23.0.0"
+flake8 = "^6.0.0"
+mypy = "^1.0.0"
+
+[tool.poetry.scripts]
+lyrics-to-melody = "lyrics_to_melody.main:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["lyrics_to_melody/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=lyrics_to_melody --cov-report=html --cov-report=term"
