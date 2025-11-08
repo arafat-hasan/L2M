@@ -14,6 +14,7 @@ from lyrics_to_melody.services.lyric_parser import LyricParser
 from lyrics_to_melody.services.melody_generator import MelodyGenerator
 from lyrics_to_melody.services.midi_writer import MIDIWriter
 from lyrics_to_melody.utils.logger import get_logger
+from lyrics_to_melody.utils.path_utils import sanitize_filename
 
 logger = get_logger(__name__)
 
@@ -56,10 +57,18 @@ class LyricsToMelodyApp:
 
         Args:
             lyrics: Input lyrics text
-            output_name: Base name for output files
+            output_name: Base name for output files (will be sanitized for security)
             dry_run: If True, only show analysis without generating files
         """
+        # Sanitize output_name to prevent path traversal attacks
+        safe_output_name = sanitize_filename(output_name)
+        if safe_output_name != output_name:
+            logger.warning(
+                f"Output name sanitized for security: '{output_name}' -> '{safe_output_name}'"
+            )
+
         logger.info("Starting lyrics-to-melody pipeline")
+        logger.info(f"Output name: {safe_output_name}")
         logger.info(f"Input lyrics: {lyrics[:100]}{'...' if len(lyrics) > 100 else ''}")
 
         try:
@@ -117,7 +126,7 @@ class LyricsToMelodyApp:
             logger.info("STEP 4: Writing Output Files")
             logger.info("=" * 60)
 
-            midi_path, xml_path = self.midi_writer.write_both(melody, output_name)
+            midi_path, xml_path = self.midi_writer.write_both(melody, safe_output_name)
 
             logger.info(f"✓ MIDI file: {midi_path}")
             logger.info(f"✓ MusicXML file: {xml_path}")
