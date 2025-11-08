@@ -5,6 +5,12 @@ This script demonstrates how to use the system programmatically
 (as opposed to using the CLI).
 """
 
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from lyrics_to_melody.llm.client import LLMClient
 from lyrics_to_melody.services.lyric_parser import LyricParser
 from lyrics_to_melody.services.melody_generator import MelodyGenerator

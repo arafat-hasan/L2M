@@ -14,6 +14,9 @@ from lyrics_to_melody.services.lyric_parser import LyricParser
 from lyrics_to_melody.services.melody_generator import MelodyGenerator
 from lyrics_to_melody.services.midi_writer import MIDIWriter
 from lyrics_to_melody.utils.logger import get_logger
+from lyrics_to_melody.utils.path_utils import sanitize_filename
+from lyrics_to_melody.utils.input_validators import InputValidator
+from lyrics_to_melody.utils.progress import step_progress, show_status
 
 logger = get_logger(__name__)
 
@@ -56,51 +59,65 @@ class LyricsToMelodyApp:
 
         Args:
             lyrics: Input lyrics text
-            output_name: Base name for output files
+            output_name: Base name for output files (will be sanitized for security)
             dry_run: If True, only show analysis without generating files
+
+        Raises:
+            ValueError: If inputs fail validation
         """
+        # Validate lyrics input
+        is_valid, error_msg = InputValidator.validate_lyrics(lyrics)
+        if not is_valid:
+            logger.error(f"Lyrics validation failed: {error_msg}")
+            raise ValueError(f"Invalid lyrics input:\n{error_msg}")
+
+        # Validate output name
+        is_valid, error_msg = InputValidator.validate_output_name(output_name)
+        if not is_valid:
+            logger.error(f"Output name validation failed: {error_msg}")
+            raise ValueError(f"Invalid output name:\n{error_msg}")
+
+        # Sanitize output_name to prevent path traversal attacks
+        safe_output_name = sanitize_filename(output_name)
+        if safe_output_name != output_name:
+            logger.warning(
+                f"Output name sanitized for security: '{output_name}' -> '{safe_output_name}'"
+            )
+
         logger.info("Starting lyrics-to-melody pipeline")
+        logger.info(f"Output name: {safe_output_name}")
         logger.info(f"Input lyrics: {lyrics[:100]}{'...' if len(lyrics) > 100 else ''}")
 
         try:
             # Step 1: Parse and normalize lyrics
-            logger.info("\n" + "=" * 60)
-            logger.info("STEP 1: Lyrics Parsing")
-            logger.info("=" * 60)
-
-            normalized_lyrics = self.lyric_parser.normalize(lyrics)
-            logger.info(f"Normalized lyrics: {normalized_lyrics}")
+            with step_progress(1, 4, "Lyrics Parsing"):
+                normalized_lyrics = self.lyric_parser.normalize(lyrics)
+                logger.info(f"Normalized lyrics: {normalized_lyrics}")
 
             # Step 2: Emotion and rhythm analysis
-            logger.info("\n" + "=" * 60)
-            logger.info("STEP 2: Emotion & Rhythm Analysis")
-            logger.info("=" * 60)
+            with step_progress(2, 4, "Emotion & Rhythm Analysis"):
+                emotion_response = self.llm_client.analyze_emotion(normalized_lyrics)
+                emotion_analysis = emotion_response.analysis
 
-            emotion_response = self.llm_client.analyze_emotion(normalized_lyrics)
-            emotion_analysis = emotion_response.analysis
+                show_status(f"Emotion: {emotion_analysis.emotion}", "info")
+                show_status(f"Tempo: {emotion_analysis.tempo} BPM", "info")
+                show_status(f"Time Signature: {emotion_analysis.time_signature}", "info")
+                show_status(f"Phrases: {len(emotion_analysis.phrases)}", "info")
+                show_status(f"Total Syllables: {emotion_analysis.get_total_syllables()}", "info")
 
-            logger.info(f"Emotion: {emotion_analysis.emotion}")
-            logger.info(f"Tempo: {emotion_analysis.tempo} BPM")
-            logger.info(f"Time Signature: {emotion_analysis.time_signature}")
-            logger.info(f"Phrases: {len(emotion_analysis.phrases)}")
-            logger.info(f"Total Syllables: {emotion_analysis.get_total_syllables()}")
-
-            if emotion_response.fallback_used:
-                logger.warning("Note: Fallback emotion analysis was used")
+                if emotion_response.fallback_used:
+                    show_status("Fallback emotion analysis was used", "warning")
 
             # Step 3: Melody generation
-            logger.info("\n" + "=" * 60)
-            logger.info("STEP 3: Melody Generation")
-            logger.info("=" * 60)
+            with step_progress(3, 4, "Melody Generation"):
+                melody = self.melody_generator.generate(
+                    lyrics=normalized_lyrics,
+                    emotion_analysis=emotion_analysis
+                )
 
-            melody = self.melody_generator.generate(
-                lyrics=normalized_lyrics,
-                emotion_analysis=emotion_analysis
-            )
-
-            logger.info(f"Generated melody in key: {melody.key}")
-            logger.info(f"Number of notes: {melody.get_note_count()}")
-            logger.info(f"Total duration: {melody.get_duration()} beats")
+                show_status(f"Generated melody in key: {melody.key}", "success")
+                show_status(f"Number of notes: {melody.get_note_count()}", "info")
+                show_status(f"Total duration: {melody.get_duration()} beats", "info")
 
             # Preview
             if dry_run:
@@ -109,15 +126,12 @@ class LyricsToMelodyApp:
                 logger.info("=" * 60)
                 preview = self.midi_writer.preview_score(melody)
                 print("\n" + preview)
-                logger.info("\nDry run complete. No files generated.")
+                show_status("Dry run complete. No files generated.", "success")
                 return
 
             # Step 4: Write output files
-            logger.info("\n" + "=" * 60)
-            logger.info("STEP 4: Writing Output Files")
-            logger.info("=" * 60)
-
-            midi_path, xml_path = self.midi_writer.write_both(melody, output_name)
+            with step_progress(4, 4, "Writing Output Files"):
+                midi_path, xml_path = self.midi_writer.write_both(melody, safe_output_name)
 
             logger.info(f"✓ MIDI file: {midi_path}")
             logger.info(f"✓ MusicXML file: {xml_path}")
