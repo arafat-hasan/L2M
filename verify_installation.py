@@ -17,16 +17,16 @@ def check_imports():
     print("Checking imports...")
 
     modules = [
-        "lyrics_to_melody.config",
-        "lyrics_to_melody.models.emotion_analysis",
-        "lyrics_to_melody.models.melody_structure",
-        "lyrics_to_melody.llm.client",
-        "lyrics_to_melody.llm.parsers",
-        "lyrics_to_melody.services.lyric_parser",
-        "lyrics_to_melody.services.melody_generator",
-        "lyrics_to_melody.services.midi_writer",
-        "lyrics_to_melody.utils.logger",
-        "lyrics_to_melody.utils.validators",
+        "l2m.config",
+        "l2m.models.emotion_analysis",
+        "l2m.models.melody_structure",
+        "l2m.llm.client",
+        "l2m.llm.parsers",
+        "l2m.services.lyric_parser",
+        "l2m.services.melody_generator",
+        "l2m.services.midi_writer",
+        "l2m.utils.logger",
+        "l2m.utils.validators",
     ]
 
     failed = []
@@ -68,7 +68,7 @@ def check_directories():
     """Check that required directories exist."""
     print("\nChecking directories...")
 
-    base = Path(__file__).parent / "lyrics_to_melody"
+    base = Path(__file__).parent / "l2m"
     directories = [
         base / "output",
         base / "logs",
@@ -115,7 +115,7 @@ def check_prompts():
     """Check that prompt templates exist."""
     print("\nChecking prompt templates...")
 
-    base = Path(__file__).parent / "lyrics_to_melody" / "llm" / "prompts"
+    base = Path(__file__).parent / "l2m" / "llm" / "prompts"
     prompts = [
         "emotion_prompt.txt",
         "melody_prompt.txt",
@@ -174,7 +174,7 @@ def main():
     if all_passed:
         print("\n✓ All checks passed! System is ready to use.")
         print("\nTry running:")
-        print('  python lyrics_to_melody/main.py --lyrics "The sun will rise" --dry-run')
+        print('  python l2m/main.py --lyrics "The sun will rise" --dry-run')
         return 0
     else:
         print("\n✗ Some checks failed. Please fix the issues above.")

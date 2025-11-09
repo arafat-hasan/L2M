@@ -11,7 +11,7 @@ Copy each issue block to create a new GitHub issue.
 
 **Priority:** 🔴 Critical (Security)
 **Labels:** `security`, `bug`, `high-priority`
-**Files:** `lyrics_to_melody/main.py:51`
+**Files:** `l2m/main.py:51`
 
 #### Description
 The `output_name` parameter in `main.py` is not sanitized, allowing path traversal attacks. A malicious user could write files to arbitrary locations on the filesystem.
@@ -74,7 +74,7 @@ def sanitize_filename(name: str) -> str:
 
 **Priority:** 🔴 Critical (Crash/Stability)
 **Labels:** `bug`, `crash`, `high-priority`
-**Files:** `lyrics_to_melody/config.py:39-40`
+**Files:** `l2m/config.py:39-40`
 
 #### Description
 Environment variables are parsed using `float()` and `int()` without exception handling. Invalid values will crash the application on startup.
@@ -134,7 +134,7 @@ MAX_TOKENS: int = int(_safe_float("MAX_TOKENS", 1500, 1, 32000))
 
 **Priority:** 🔴 Critical (Crash)
 **Labels:** `bug`, `crash`, `api`
-**Files:** `lyrics_to_melody/llm/client.py:97`
+**Files:** `l2m/llm/client.py:97`
 
 #### Description
 The code accesses `response.choices[0]` without validating that the array is non-empty, causing `IndexError` crashes.
@@ -200,7 +200,7 @@ def _call_llm(self, prompt: str) -> str:
 
 **Priority:** 🔴 Critical (Reliability)
 **Labels:** `enhancement`, `api`, `reliability`
-**Files:** `lyrics_to_melody/llm/client.py:84-107`
+**Files:** `l2m/llm/client.py:84-107`
 
 #### Description
 API calls have no retry logic. Transient network failures or temporary API issues cause permanent failures.
@@ -301,7 +301,7 @@ def _call_llm(self, prompt: str) -> str:
 
 **Priority:** 🔴 Critical (Operational)
 **Labels:** `bug`, `ops`, `logging`
-**Files:** `lyrics_to_melody/utils/logger.py:49-50`
+**Files:** `l2m/utils/logger.py:49-50`
 
 #### Description
 Logs are written to a single file with no rotation, which will eventually fill the disk.
@@ -366,7 +366,7 @@ root_logger.addHandler(error_handler)
 
 **Priority:** 🔴 Critical (Architecture)
 **Labels:** `refactor`, `architecture`, `technical-debt`
-**Files:** `lyrics_to_melody/llm/client.py`, `lyrics_to_melody/services/`
+**Files:** `l2m/llm/client.py`, `l2m/services/`
 
 #### Description
 `llm/client.py` imports from `services/` in fallback methods, while services import `LLMClient`. This creates circular dependencies and makes testing difficult.
@@ -409,7 +409,7 @@ class LLMClient:
 
 **Option 2: Move Fallbacks to Separate Module**
 ```
-lyrics_to_melody/
+l2m/
   ├── fallbacks/
   │   ├── __init__.py
   │   ├── emotion_fallback.py
@@ -446,7 +446,7 @@ class MelodyGeneratorFactory:
 
 **Priority:** 🟡 High
 **Labels:** `enhancement`, `validation`, `ux`
-**Files:** `lyrics_to_melody/main.py`, `lyrics_to_melody/config.py`, `lyrics_to_melody/services/`
+**Files:** `l2m/main.py`, `l2m/config.py`, `l2m/services/`
 
 #### Description
 Public methods lack input validation, allowing invalid data to propagate through the system.
@@ -534,7 +534,7 @@ class InputValidator:
 
 **Priority:** 🟡 High
 **Labels:** `enhancement`, `api`, `reliability`
-**Files:** `lyrics_to_melody/llm/client.py`
+**Files:** `l2m/llm/client.py`
 
 #### Description
 429 (Rate Limit) errors are not specifically handled. Should use `Retry-After` header.
@@ -569,7 +569,7 @@ except RateLimitError as e:
 
 **Priority:** 🟡 High
 **Labels:** `enhancement`, `api`, `config`
-**Files:** `lyrics_to_melody/llm/client.py:87-94`
+**Files:** `l2m/llm/client.py:87-94`
 
 #### Description
 API calls have no timeout, causing indefinite hangs on network issues.
@@ -603,7 +603,7 @@ response = self.client.chat.completions.create(
 
 **Priority:** 🟡 High (Security)
 **Labels:** `security`, `validation`, `config`
-**Files:** `lyrics_to_melody/config.py:41`
+**Files:** `l2m/config.py:41`
 
 #### Description
 `API_BASE` URL is not validated, could point to malicious servers.

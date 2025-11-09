@@ -21,7 +21,7 @@ flake8 = "^6.0.0"
 mypy = "^1.0.0"
 
 [tool.poetry.scripts]
-l2m = "lyrics_to_melody.main:main"
+l2m = "l2m.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -38,8 +38,8 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
-testpaths = ["lyrics_to_melody/tests"]
+testpaths = ["l2m/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=lyrics_to_melody --cov-report=html --cov-report=term"
+addopts = "-v --cov=l2m --cov-report=html --cov-report=term"

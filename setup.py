@@ -34,7 +34,7 @@ setup(
     python_requires=">=3.9",
     entry_points={
         "console_scripts": [
-            "l2m=lyrics_to_melody.main:main",
+            "l2m=l2m.main:main",
         ],
     },
     classifiers=[
@@ -49,7 +49,7 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     package_data={
-        "lyrics_to_melody": [
+        "l2m": [
             "llm/prompts/*.txt",
             "output/.gitkeep",
             "logs/.gitkeep",
