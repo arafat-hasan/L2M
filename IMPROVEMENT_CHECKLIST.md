@@ -1,4 +1,4 @@
-# Lyrics-to-Melody Production Improvements Checklist
+# l2m Production Improvements Checklist
 
 Quick reference for tracking implementation progress.
 

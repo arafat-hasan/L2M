@@ -1,4 +1,4 @@
-# Lyrics-to-Melody System
+# L2M: Lyrics-to-Melody System
 
 A complete, modular Python system that converts human lyrics into structured melodic output (MIDI/MusicXML) using AI-powered emotion analysis and melody generation.
 
@@ -44,7 +44,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e .
 ```
 
-This installs the package and makes the `lyrics-to-melody` command available.
+This installs the package and makes the `l2m` command available.
 
 ### Option 2: Install Dependencies Only
 
@@ -101,7 +101,7 @@ MAX_TOKENS=1500
 **If installed as package (Option 1):**
 
 ```bash
-lyrics-to-melody --lyrics "The sun will rise again"
+l2m --lyrics "The sun will rise again"
 ```
 
 **If using run.py (Option 2):**
@@ -118,7 +118,7 @@ This will generate:
 
 ```bash
 # With installed package
-lyrics-to-melody --lyrics "Dancing in the moonlight" --out dance
+l2m --lyrics "Dancing in the moonlight" --out dance
 
 # Or with run.py
 python run.py --lyrics "Dancing in the moonlight" --out dance
@@ -134,7 +134,7 @@ Preview the analysis without generating files:
 
 ```bash
 # With installed package
-lyrics-to-melody --lyrics "Stars will guide me home" --dry-run
+l2m --lyrics "Stars will guide me home" --dry-run
 
 # Or with run.py
 python run.py --lyrics "Stars will guide me home" --dry-run
@@ -153,7 +153,7 @@ python run.py --lyrics "Memories fade like photographs left in the rain"
 python run.py --lyrics "Tomorrow brings a brand new day, hope will light the way"
 ```
 
-**Note:** Replace `python run.py` with `lyrics-to-melody` if you installed as a package.
+**Note:** Replace `python run.py` with `l2m` if you installed as a package.
 
 ## Project Structure
 

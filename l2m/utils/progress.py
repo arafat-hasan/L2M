@@ -10,7 +10,7 @@ import threading
 from typing import Optional, Callable, Any
 from contextlib import contextmanager
 
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

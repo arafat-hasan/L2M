@@ -7,8 +7,8 @@ Handles normalization, cleaning, and syllable estimation for lyrics.
 import re
 from typing import List
 
-from lyrics_to_melody.utils.logger import get_logger
-from lyrics_to_melody.utils.validators import LyricsValidator
+from l2m.utils.logger import get_logger
+from l2m.utils.validators import LyricsValidator
 
 logger = get_logger(__name__)
 

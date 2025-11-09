@@ -7,7 +7,7 @@ Provides comprehensive validation for user inputs with descriptive error message
 from typing import Tuple, Optional
 import re
 
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

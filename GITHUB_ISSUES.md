@@ -1,4 +1,4 @@
-# GitHub Issues for Lyrics-to-Melody Production Improvements
+# GitHub Issues for l2m Production Improvements
 
 This document contains formatted GitHub issues for critical fixes and improvements.
 Copy each issue block to create a new GitHub issue.

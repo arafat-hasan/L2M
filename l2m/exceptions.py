@@ -1,12 +1,12 @@
 """
-Custom exception hierarchy for the Lyrics-to-Melody system.
+Custom exception hierarchy for the l2m system.
 
 Provides specific exceptions for different error scenarios with actionable error messages.
 """
 
 
 class LyricsToMelodyError(Exception):
-    """Base exception for all lyrics-to-melody errors."""
+    """Base exception for all l2m errors."""
 
     def __init__(self, message: str, details: str = ""):
         """

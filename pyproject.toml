@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "lyrics-to-melody"
+name = "l2m"
 version = "1.0.0"
 description = "A modular Python system that converts human lyrics into structured melodic output (MIDI/MusicXML)"
 authors = ["AI Developer"]
@@ -21,7 +21,7 @@ flake8 = "^6.0.0"
 mypy = "^1.0.0"
 
 [tool.poetry.scripts]
-lyrics-to-melody = "lyrics_to_melody.main:main"
+l2m = "lyrics_to_melody.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

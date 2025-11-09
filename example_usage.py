@@ -1,5 +1,5 @@
 """
-Example usage script for the Lyrics-to-Melody system.
+Example usage script for the l2m system.
 
 This script demonstrates how to use the system programmatically
 (as opposed to using the CLI).
@@ -11,11 +11,11 @@ from pathlib import Path
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from lyrics_to_melody.llm.client import LLMClient
-from lyrics_to_melody.services.lyric_parser import LyricParser
-from lyrics_to_melody.services.melody_generator import MelodyGenerator
-from lyrics_to_melody.services.midi_writer import MIDIWriter
-from lyrics_to_melody.config import config
+from l2m.llm.client import LLMClient
+from l2m.services.lyric_parser import LyricParser
+from l2m.services.melody_generator import MelodyGenerator
+from l2m.services.midi_writer import MIDIWriter
+from l2m.config import config
 
 
 def example_1_basic():
@@ -60,7 +60,7 @@ def example_2_fallback():
     print("=" * 60)
 
     # Simulate LLM failure by directly using fallback
-    from lyrics_to_melody.models.emotion_analysis import (
+    from l2m.models.emotion_analysis import (
         EmotionAnalysis,
         PhraseAnalysis,
     )
@@ -127,7 +127,7 @@ def example_4_preview():
     print("EXAMPLE 4: Preview Mode")
     print("=" * 60)
 
-    from lyrics_to_melody.models.melody_structure import Melody, NoteEvent
+    from l2m.models.melody_structure import Melody, NoteEvent
 
     # Create a simple melody manually
     melody = Melody(
@@ -151,7 +151,7 @@ def example_4_preview():
 def main():
     """Run all examples."""
     print("\n" + "=" * 60)
-    print("LYRICS-TO-MELODY EXAMPLE USAGE")
+    print("l2m EXAMPLE USAGE")
     print("=" * 60)
 
     # Check configuration

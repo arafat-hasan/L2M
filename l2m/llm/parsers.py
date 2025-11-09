@@ -11,9 +11,9 @@ from typing import Optional, Any, Dict
 
 from pydantic import ValidationError
 
-from lyrics_to_melody.models.emotion_analysis import EmotionAnalysis
-from lyrics_to_melody.models.melody_structure import MelodyStructure
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.models.emotion_analysis import EmotionAnalysis
+from l2m.models.melody_structure import MelodyStructure
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

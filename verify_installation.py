@@ -91,7 +91,7 @@ def check_config():
     print("\nChecking configuration...")
 
     try:
-        from lyrics_to_melody.config import config
+        from l2m.config import config
 
         print(f"  Model: {config.MODEL_NAME}")
         print(f"  Temperature: {config.TEMPERATURE}")
@@ -137,7 +137,7 @@ def check_prompts():
 def main():
     """Run all verification checks."""
     print("=" * 60)
-    print("LYRICS-TO-MELODY INSTALLATION VERIFICATION")
+    print("l2m INSTALLATION VERIFICATION")
     print("=" * 60)
 
     checks = [

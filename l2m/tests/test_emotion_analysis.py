@@ -5,11 +5,11 @@ Unit tests for emotion analysis components.
 import pytest
 from pydantic import ValidationError
 
-from lyrics_to_melody.models.emotion_analysis import (
+from l2m.models.emotion_analysis import (
     EmotionAnalysis,
     PhraseAnalysis,
 )
-from lyrics_to_melody.llm.parsers import EmotionParser
+from l2m.llm.parsers import EmotionParser
 
 
 class TestPhraseAnalysis:

@@ -1,5 +1,5 @@
 """
-OpenAI API client wrapper for the Lyrics-to-Melody system.
+OpenAI API client wrapper for the l2m system.
 
 Provides high-level interface for emotion analysis and melody generation
 using LLM (Language Model) capabilities.
@@ -18,19 +18,19 @@ from openai import (
     APIConnectionError,
 )
 
-from lyrics_to_melody.config import config
-from lyrics_to_melody.llm.parsers import EmotionParser, MelodyParser
-from lyrics_to_melody.models.emotion_analysis import (
+from l2m.config import config
+from l2m.llm.parsers import EmotionParser, MelodyParser
+from l2m.models.emotion_analysis import (
     EmotionAnalysis,
     EmotionAnalysisResponse,
 )
-from lyrics_to_melody.models.melody_structure import (
+from l2m.models.melody_structure import (
     MelodyStructure,
     MelodyStructureResponse,
 )
-from lyrics_to_melody.utils.logger import get_logger
-from lyrics_to_melody.utils.progress import progress
-from lyrics_to_melody import exceptions
+from l2m.utils.logger import get_logger
+from l2m.utils.progress import progress
+from l2m import exceptions
 
 logger = get_logger(__name__)
 
@@ -350,7 +350,7 @@ class LLMClient:
         Returns:
             EmotionAnalysisResponse: Fallback response
         """
-        from lyrics_to_melody.services.lyric_parser import LyricParser
+        from l2m.services.lyric_parser import LyricParser
 
         logger.warning("[LLMClient] Using fallback emotion analysis")
 
@@ -391,7 +391,7 @@ class LLMClient:
         Returns:
             MelodyStructureResponse: Fallback response
         """
-        from lyrics_to_melody.services.melody_generator import MelodyGenerator
+        from l2m.services.melody_generator import MelodyGenerator
 
         logger.warning("[LLMClient] Using fallback melody structure")
 

@@ -1,5 +1,5 @@
 """
-Main CLI entry point for the Lyrics-to-Melody system.
+Main CLI entry point for the l2m system.
 
 Provides command-line interface for converting lyrics to musical melodies.
 """
@@ -8,22 +8,22 @@ import argparse
 import sys
 from pathlib import Path
 
-from lyrics_to_melody.config import config
-from lyrics_to_melody.llm.client import LLMClient
-from lyrics_to_melody.services.lyric_parser import LyricParser
-from lyrics_to_melody.services.melody_generator import MelodyGenerator
-from lyrics_to_melody.services.midi_writer import MIDIWriter
-from lyrics_to_melody.utils.logger import get_logger
-from lyrics_to_melody.utils.path_utils import sanitize_filename
-from lyrics_to_melody.utils.input_validators import InputValidator
-from lyrics_to_melody.utils.progress import step_progress, show_status
+from l2m.config import config
+from l2m.llm.client import LLMClient
+from l2m.services.lyric_parser import LyricParser
+from l2m.services.melody_generator import MelodyGenerator
+from l2m.services.midi_writer import MIDIWriter
+from l2m.utils.logger import get_logger
+from l2m.utils.path_utils import sanitize_filename
+from l2m.utils.input_validators import InputValidator
+from l2m.utils.progress import step_progress, show_status
 
 logger = get_logger(__name__)
 
 
 class LyricsToMelodyApp:
     """
-    Main application class for Lyrics-to-Melody system.
+    Main application class for l2m system.
 
     Orchestrates the complete pipeline from lyrics to music notation.
     """
@@ -31,7 +31,7 @@ class LyricsToMelodyApp:
     def __init__(self):
         """Initialize the application."""
         logger.info("=" * 60)
-        logger.info("Lyrics-to-Melody System")
+        logger.info("l2m System")
         logger.info("=" * 60)
 
         # Validate configuration
@@ -84,7 +84,7 @@ class LyricsToMelodyApp:
                 f"Output name sanitized for security: '{output_name}' -> '{safe_output_name}'"
             )
 
-        logger.info("Starting lyrics-to-melody pipeline")
+        logger.info("Starting l2m pipeline")
         logger.info(f"Output name: {safe_output_name}")
         logger.info(f"Input lyrics: {lyrics[:100]}{'...' if len(lyrics) > 100 else ''}")
 
@@ -170,7 +170,7 @@ def main():
     Main CLI entry point.
     """
     parser = argparse.ArgumentParser(
-        description="Lyrics-to-Melody: Convert song lyrics into musical melodies",
+        description="l2m: Convert song lyrics into musical melodies",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

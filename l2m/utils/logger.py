@@ -1,5 +1,5 @@
 """
-Logging utility for the Lyrics-to-Melody system.
+Logging utility for the l2m system.
 
 Provides centralized logging configuration with file and console output,
 including log rotation to prevent disk space issues.
@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from lyrics_to_melody.config import config
+from l2m.config import config
 
 
 class Logger:

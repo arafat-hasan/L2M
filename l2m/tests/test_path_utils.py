@@ -5,7 +5,7 @@ Unit tests for path utilities.
 import pytest
 from pathlib import Path
 
-from lyrics_to_melody.utils.path_utils import (
+from l2m.utils.path_utils import (
     sanitize_filename,
     validate_output_path,
     ensure_safe_path,
