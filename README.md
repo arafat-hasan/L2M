@@ -111,8 +111,8 @@ python run.py --lyrics "The sun will rise again"
 ```
 
 This will generate:
-- `lyrics_to_melody/output/output.mid` - MIDI file
-- `lyrics_to_melody/output/output.musicxml` - MusicXML file
+- `l2m/output/output.mid` - MIDI file
+- `l2m/output/output.musicxml` - MusicXML file
 
 ### Custom Output Name
 
@@ -125,8 +125,8 @@ python run.py --lyrics "Dancing in the moonlight" --out dance
 ```
 
 Generates:
-- `lyrics_to_melody/output/dance.mid`
-- `lyrics_to_melody/output/dance.musicxml`
+- `l2m/output/dance.mid`
+- `l2m/output/dance.musicxml`
 
 ### Dry Run (Preview Only)
 
@@ -158,7 +158,7 @@ python run.py --lyrics "Tomorrow brings a brand new day, hope will light the way
 ## Project Structure
 
 ```
-lyrics_to_melody/
+l2m/
 │
 ├── main.py                      # CLI entry point
 ├── config.py                    # Configuration management
@@ -276,14 +276,14 @@ Run the test suite:
 pytest
 
 # With coverage report
-pytest --cov=lyrics_to_melody --cov-report=html
+pytest --cov=l2m --cov-report=html
 ```
 
 Run individual test files:
 
 ```bash
-pytest lyrics_to_melody/tests/test_emotion_analysis.py
-pytest lyrics_to_melody/tests/test_melody_generation.py
+pytest l2m/tests/test_emotion_analysis.py
+pytest l2m/tests/test_melody_generation.py
 ```
 
 ## API Reference
@@ -291,7 +291,7 @@ pytest lyrics_to_melody/tests/test_melody_generation.py
 ### LLMClient
 
 ```python
-from lyrics_to_melody.llm.client import LLMClient
+from l2m.llm.client import LLMClient
 
 client = LLMClient(api_key="your_key")
 
@@ -304,7 +304,7 @@ print(response.analysis.tempo)    # 90
 ### MelodyGenerator
 
 ```python
-from lyrics_to_melody.services.melody_generator import MelodyGenerator
+from l2m.services.melody_generator import MelodyGenerator
 
 generator = MelodyGenerator(llm_client)
 melody = generator.generate(lyrics, emotion_analysis)
@@ -316,7 +316,7 @@ print(f"Notes: {melody.get_note_count()}")
 ### MIDIWriter
 
 ```python
-from lyrics_to_melody.services.midi_writer import MIDIWriter
+from l2m.services.midi_writer import MIDIWriter
 
 writer = MIDIWriter()
 midi_path, xml_path = writer.write_both(melody, "my_song")
