@@ -3,7 +3,7 @@ Unit tests for input validation utilities.
 """
 
 import pytest
-from lyrics_to_melody.utils.input_validators import InputValidator
+from l2m.utils.input_validators import InputValidator
 
 
 class TestLyricsValidation:

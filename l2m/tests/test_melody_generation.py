@@ -5,13 +5,13 @@ Unit tests for melody generation components.
 import pytest
 from pydantic import ValidationError
 
-from lyrics_to_melody.models.melody_structure import (
+from l2m.models.melody_structure import (
     MelodyStructure,
     NoteStructure,
     NoteEvent,
     Melody,
 )
-from lyrics_to_melody.llm.parsers import MelodyParser
+from l2m.llm.parsers import MelodyParser
 
 
 class TestNoteStructure:

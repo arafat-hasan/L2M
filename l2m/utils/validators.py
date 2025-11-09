@@ -1,5 +1,5 @@
 """
-Validation utilities for the Lyrics-to-Melody system.
+Validation utilities for the l2m system.
 
 Provides functions for validating musical parameters, note names,
 and other domain-specific data.
@@ -8,7 +8,7 @@ and other domain-specific data.
 import re
 from typing import Tuple, Optional
 
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

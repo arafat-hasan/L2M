@@ -9,9 +9,9 @@ from typing import Optional
 
 from music21 import stream, note, metadata, tempo, meter, key
 
-from lyrics_to_melody.config import config
-from lyrics_to_melody.models.melody_structure import Melody
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.config import config
+from l2m.models.melody_structure import Melody
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

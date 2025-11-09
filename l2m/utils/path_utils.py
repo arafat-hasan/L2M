@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

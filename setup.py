@@ -1,5 +1,5 @@
 """
-Setup script for the Lyrics-to-Melody system.
+Setup script for the l2m system.
 """
 
 from setuptools import setup, find_packages
@@ -20,7 +20,7 @@ if requirements_file.exists():
     ]
 
 setup(
-    name="lyrics-to-melody",
+    name="l2m",
     version="1.0.0",
     description="A modular Python system that converts lyrics into melodic output (MIDI/MusicXML)",
     long_description=long_description,
@@ -34,7 +34,7 @@ setup(
     python_requires=">=3.9",
     entry_points={
         "console_scripts": [
-            "lyrics-to-melody=lyrics_to_melody.main:main",
+            "l2m=lyrics_to_melody.main:main",
         ],
     },
     classifiers=[

@@ -1,5 +1,5 @@
 """
-Configuration management for the Lyrics-to-Melody system.
+Configuration management for the l2m system.
 
 This module loads environment variables and provides centralized
 configuration settings for the entire application.
@@ -22,7 +22,7 @@ _config_logger = logging.getLogger(__name__)
 
 class Config:
     """
-    Centralized configuration class for the Lyrics-to-Melody system.
+    Centralized configuration class for the l2m system.
 
     Attributes:
         OPENAI_API_KEY: API key for OpenAI services

@@ -1,8 +1,8 @@
-# Lyrics-to-Melody Production Readiness Plan
+# l2m Production Readiness Plan
 
 ## Overview
 
-This document outlines the plan to transform the Lyrics-to-Melody system from a functional prototype to a production-grade CLI tool.
+This document outlines the plan to transform the l2m system from a functional prototype to a production-grade CLI tool.
 
 ## Current Status
 

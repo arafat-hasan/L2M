@@ -8,18 +8,18 @@ Builds the internal representation (IR) for music notation.
 import random
 from typing import List, TYPE_CHECKING
 
-from lyrics_to_melody.config import config
-from lyrics_to_melody.models.melody_structure import (
+from l2m.config import config
+from l2m.models.melody_structure import (
     Melody,
     MelodyStructure,
     NoteEvent,
     NoteStructure,
 )
-from lyrics_to_melody.models.emotion_analysis import EmotionAnalysis
-from lyrics_to_melody.utils.logger import get_logger
+from l2m.models.emotion_analysis import EmotionAnalysis
+from l2m.utils.logger import get_logger
 
 if TYPE_CHECKING:
-    from lyrics_to_melody.llm.client import LLMClient
+    from l2m.llm.client import LLMClient
 
 logger = get_logger(__name__)
 
