@@ -164,7 +164,7 @@ class Config:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gpt-4o-mini")
     TEMPERATURE: float = _safe_float("TEMPERATURE", 0.7, 0.0, 2.0)
-    MAX_TOKENS: int = _safe_int("MAX_TOKENS", 1500, 1, 32000)
+    MAX_TOKENS: int = _safe_int("MAX_TOKENS", 4000, 1, 32000)
     API_BASE: str = _safe_url("API_BASE", "https://api.openai.com/v1")
     API_TIMEOUT: int = _safe_int("API_TIMEOUT", 30, 1, 300)
 
@@ -182,6 +182,10 @@ class Config:
     DEFAULT_EMOTION: str = "neutral"
     DEFAULT_KEY: str = "C major"
     DEFAULT_VELOCITY: int = 64
+
+    # Melody Generation Chunking Configuration
+    MAX_NOTES_PER_CHUNK: int = _safe_int("MAX_NOTES_PER_CHUNK", 50, 10, 200)
+    MIN_NOTES_FOR_CHUNKING: int = _safe_int("MIN_NOTES_FOR_CHUNKING", 20, 5, 100)
 
     # Emotion-to-Musical-Parameters Mapping
     EMOTION_MAP = {

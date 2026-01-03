@@ -60,25 +60,31 @@ class MelodyGenerator:
 
         # Get total syllables
         total_syllables = emotion_analysis.get_total_syllables()
+        
+        # Determine if chunking is needed
+        if total_syllables > config.MIN_NOTES_FOR_CHUNKING:
+            logger.info(f"[MelodyGenerator] Using chunking strategy for {total_syllables} syllables")
+            melody = self._generate_chunked_melody(lyrics, emotion_analysis)
+        else:
+            logger.info(f"[MelodyGenerator] Using single-call generation for {total_syllables} syllables")
+            # Generate melody structure via LLM
+            response = self.llm_client.generate_melody_structure(
+                lyrics=lyrics,
+                emotion=emotion_analysis.emotion,
+                tempo=emotion_analysis.tempo,
+                time_signature=emotion_analysis.time_signature,
+                total_syllables=total_syllables
+            )
 
-        # Generate melody structure via LLM
-        response = self.llm_client.generate_melody_structure(
-            lyrics=lyrics,
-            emotion=emotion_analysis.emotion,
-            tempo=emotion_analysis.tempo,
-            time_signature=emotion_analysis.time_signature,
-            total_syllables=total_syllables
-        )
+            if not response.success or response.fallback_used:
+                logger.warning("[MelodyGenerator] Using fallback melody generation")
 
-        if not response.success or response.fallback_used:
-            logger.warning("[MelodyGenerator] Using fallback melody generation")
-
-        # Build internal representation
-        melody = self.build_melody_ir(
-            melody_structure=response.structure,
-            tempo=emotion_analysis.tempo,
-            time_signature=emotion_analysis.time_signature
-        )
+            # Build internal representation
+            melody = self.build_melody_ir(
+                melody_structure=response.structure,
+                tempo=emotion_analysis.tempo,
+                time_signature=emotion_analysis.time_signature
+            )
 
         logger.info(f"[MelodyGenerator] Generated melody with {melody.get_note_count()} notes")
 
@@ -122,6 +128,127 @@ class MelodyGenerator:
         )
 
         return melody
+
+    def _chunk_phrases(self, phrases: List) -> List[List]:
+        """
+        Split phrases into chunks based on MAX_NOTES_PER_CHUNK.
+
+        Args:
+            phrases: List of PhraseAnalysis objects
+
+        Returns:
+            List of phrase chunks
+        """
+        chunks = []
+        current_chunk = []
+        current_syllables = 0
+
+        for phrase in phrases:
+            phrase_syllables = phrase.syllables
+            
+            # If adding this phrase would exceed chunk size, start new chunk
+            if current_syllables > 0 and current_syllables + phrase_syllables > config.MAX_NOTES_PER_CHUNK:
+                chunks.append(current_chunk)
+                current_chunk = [phrase]
+                current_syllables = phrase_syllables
+            else:
+                current_chunk.append(phrase)
+                current_syllables += phrase_syllables
+
+        # Add remaining chunk
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        logger.info(f"[MelodyGenerator] Split {len(phrases)} phrases into {len(chunks)} chunks")
+        return chunks
+
+    def _generate_chunked_melody(
+        self,
+        lyrics: str,
+        emotion_analysis: EmotionAnalysis
+    ) -> Melody:
+        """
+        Generate melody in chunks for long lyrics.
+
+        Args:
+            lyrics: Input lyrics
+            emotion_analysis: Validated emotion analysis
+
+        Returns:
+            Melody: Complete merged melody
+        """
+        # Split phrases into chunks
+        phrase_chunks = self._chunk_phrases(emotion_analysis.phrases)
+        
+        melody_chunks = []
+        previous_notes = None
+
+        for i, chunk in enumerate(phrase_chunks):
+            logger.info(f"[MelodyGenerator] Generating chunk {i+1}/{len(phrase_chunks)}")
+            
+            # Reconstruct lyrics for this chunk
+            chunk_lyrics = " ".join([p.line for p in chunk])
+            chunk_syllables = sum([p.syllables for p in chunk])
+            
+            # Generate melody for this chunk
+            response = self.llm_client.generate_melody_structure(
+                lyrics=chunk_lyrics,
+                emotion=emotion_analysis.emotion,
+                tempo=emotion_analysis.tempo,
+                time_signature=emotion_analysis.time_signature,
+                total_syllables=chunk_syllables,
+                previous_notes=previous_notes
+            )
+
+            if not response.success or response.fallback_used:
+                logger.warning(f"[MelodyGenerator] Chunk {i+1} using fallback")
+
+            melody_chunks.append(response.structure)
+            
+            # Store last few notes for next chunk's context
+            if response.structure.melody:
+                previous_notes = response.structure.melody[-3:]  # Last 3 notes
+
+        # Merge all chunks
+        merged_structure = self._merge_melody_chunks(melody_chunks)
+        
+        # Build final melody IR
+        melody = self.build_melody_ir(
+            melody_structure=merged_structure,
+            tempo=emotion_analysis.tempo,
+            time_signature=emotion_analysis.time_signature
+        )
+
+        return melody
+
+    def _merge_melody_chunks(self, chunks: List[MelodyStructure]) -> MelodyStructure:
+        """
+        Merge multiple melody chunks into a single structure.
+
+        Args:
+            chunks: List of melody structures to merge
+
+        Returns:
+            MelodyStructure: Merged melody structure
+        """
+        if not chunks:
+            raise ValueError("No chunks to merge")
+
+        # Use key from first chunk
+        merged_key = chunks[0].key
+        merged_notes = []
+
+        for i, chunk in enumerate(chunks):
+            logger.debug(f"[MelodyGenerator] Merging chunk {i+1} with {len(chunk.melody)} notes")
+            merged_notes.extend(chunk.melody)
+
+        logger.info(f"[MelodyGenerator] Merged {len(chunks)} chunks into {len(merged_notes)} notes")
+
+        return MelodyStructure(
+            key=merged_key,
+            melody=merged_notes
+        )
+
 
     def generate_fallback_melody(
         self,

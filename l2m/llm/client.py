@@ -8,7 +8,7 @@ using LLM (Language Model) capabilities.
 import time
 from functools import wraps
 from pathlib import Path
-from typing import Optional, TypeVar, Callable
+from typing import Optional, TypeVar, Callable, List
 from string import Template
 
 from openai import (
@@ -284,7 +284,8 @@ class LLMClient:
         emotion: str,
         tempo: int,
         time_signature: str,
-        total_syllables: int
+        total_syllables: int,
+        previous_notes: Optional[List] = None
     ) -> MelodyStructureResponse:
         """
         Generate melody structure using LLM.
@@ -295,6 +296,7 @@ class LLMClient:
             tempo: Tempo in BPM
             time_signature: Time signature (e.g., '4/4')
             total_syllables: Total syllable count
+            previous_notes: Optional list of previous notes for chunk transitions
 
         Returns:
             MelodyStructureResponse: Response with melody structure or fallback
@@ -305,12 +307,20 @@ class LLMClient:
             # Load prompt template
             template_text = self._load_prompt_template("melody_prompt.txt")
             template = Template(template_text)
+            
+            # Build context from previous notes if provided
+            previous_context = ""
+            if previous_notes:
+                notes_str = ", ".join([f"{n.note}" for n in previous_notes])
+                previous_context = f"\nPrevious notes (for smooth transition): {notes_str}"
+            
             prompt = template.substitute(
                 emotion=emotion,
                 tempo=tempo,
                 time_signature=time_signature,
                 total_syllables=total_syllables,
-                lyrics=lyrics
+                lyrics=lyrics,
+                previous_context=previous_context
             )
 
             # Call LLM with progress indicator

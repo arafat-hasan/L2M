@@ -14,12 +14,12 @@ Based on the emotion analysis and lyrics provided, create a melody with:
 - Use scientific pitch notation (e.g., C4, D4, E4)
 - Middle C is C4, typical vocal range is C3-C5
 - Duration values: 0.25 (sixteenth), 0.5 (eighth), 1.0 (quarter), 2.0 (half), 4.0 (whole)
-- Match the number of notes to the number of syllables
+- **CRITICAL**: Match the number of notes to the number of syllables EXACTLY
 - Create natural melodic contours (avoid large jumps)
 
 # Examples:
 
-## Example 1:
+## Example 1 (Short):
 Emotion: hopeful
 Tempo: 85 BPM
 Time Signature: 4/4
@@ -40,11 +40,11 @@ Response:
 }
 ```
 
-## Example 2:
+## Example 2 (Medium - 15 notes):
 Emotion: happy
-Tempo: 115 BPM
+Tempo: 110 BPM
 Time Signature: 4/4
-Lyrics: "Dancing in the moonlight" (7 syllables)
+Lyrics: "Walking down the street on a sunny day, feeling good and free in every way" (15 syllables)
 
 Response:
 ```json
@@ -54,10 +54,18 @@ Response:
     {"note": "C4", "duration": 0.5},
     {"note": "D4", "duration": 0.5},
     {"note": "E4", "duration": 0.5},
-    {"note": "G4", "duration": 1.0},
+    {"note": "G4", "duration": 0.5},
+    {"note": "E4", "duration": 1.0},
+    {"note": "F4", "duration": 0.5},
+    {"note": "G4", "duration": 0.5},
+    {"note": "A4", "duration": 1.0},
+    {"note": "G4", "duration": 0.5},
     {"note": "F4", "duration": 0.5},
     {"note": "E4", "duration": 0.5},
-    {"note": "D4", "duration": 1.0}
+    {"note": "D4", "duration": 0.5},
+    {"note": "C4", "duration": 1.0},
+    {"note": "E4", "duration": 0.5},
+    {"note": "C4", "duration": 1.5}
   ]
 }
 ```
@@ -88,13 +96,16 @@ Emotion: {emotion}
 Tempo: {tempo} BPM
 Time Signature: {time_signature}
 Total Syllables: {total_syllables}
-Lyrics: {lyrics}
+Lyrics: {lyrics}$previous_context
 
 Create a melody that:
 - Uses the appropriate key for the emotion
-- Contains exactly {total_syllables} notes (one per syllable)
+- **CRITICAL**: Contains EXACTLY {total_syllables} notes (one per syllable) - this is mandatory!
 - Has natural, singable intervals
 - Follows a melodic contour appropriate for the emotion
 - Uses durations that create musical phrases
+- If previous notes are provided, create a smooth transition from them
+
+**IMPORTANT**: You MUST generate exactly {total_syllables} notes. Do not generate fewer notes. The response may be long if there are many syllables, and that is expected and correct.
 
 Provide your melody in the exact JSON format shown above, enclosed in ```json ``` code fences.

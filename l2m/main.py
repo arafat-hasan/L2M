@@ -211,19 +211,31 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Using inline lyrics
   python main.py --lyrics "The sun will rise again"
-  python main.py --lyrics "Dancing in the moonlight" --out dance.mid
-  python main.py --lyrics "Stars guide me home" --dry-run
+  python main.py --lyrics "Dancing in the moonlight" --out dance --audio
+  
+  # Using lyrics from a file
+  python main.py --lyrics-file my_song.txt --out my_song --audio
+  python main.py --lyrics-file lyrics.txt --dry-run
 
 For more information, see README.md
         """
     )
 
-    parser.add_argument(
+    # Create mutually exclusive group for lyrics input
+    lyrics_group = parser.add_mutually_exclusive_group(required=True)
+    
+    lyrics_group.add_argument(
         "--lyrics",
         type=str,
-        required=True,
         help="Input lyrics as a string"
+    )
+    
+    lyrics_group.add_argument(
+        "--lyrics-file",
+        type=str,
+        help="Path to text file containing lyrics"
     )
 
     parser.add_argument(
@@ -254,10 +266,31 @@ For more information, see README.md
 
     args = parser.parse_args()
 
+    # Read lyrics from file if --lyrics-file is provided
+    if args.lyrics_file:
+        try:
+            lyrics_path = Path(args.lyrics_file)
+            if not lyrics_path.exists():
+                print(f"ERROR: Lyrics file not found: {args.lyrics_file}")
+                sys.exit(1)
+            
+            with open(lyrics_path, 'r', encoding='utf-8') as f:
+                lyrics = f.read().strip()
+            
+            if not lyrics:
+                print(f"ERROR: Lyrics file is empty: {args.lyrics_file}")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"ERROR: Failed to read lyrics file: {e}")
+            sys.exit(1)
+    else:
+        lyrics = args.lyrics
+
     # Create and run application
     app = LyricsToMelodyApp()
     app.process_lyrics(
-        lyrics=args.lyrics,
+        lyrics=lyrics,
         output_name=args.out,
         dry_run=args.dry_run,
         enable_audio=args.audio,
