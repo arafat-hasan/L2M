@@ -65,6 +65,6 @@ Response:
 
 Now analyze these lyrics:
 
-{lyrics}
+$lyrics
 
 Provide your analysis in the exact JSON format shown above, enclosed in ```json ``` code fences.

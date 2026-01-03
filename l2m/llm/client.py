@@ -9,6 +9,7 @@ import time
 from functools import wraps
 from pathlib import Path
 from typing import Optional, TypeVar, Callable
+from string import Template
 
 from openai import (
     OpenAI,
@@ -132,7 +133,7 @@ class LLMClient:
         if not self.api_key:
             raise exceptions.InvalidAPIKeyError()
 
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(api_key=self.api_key, base_url=config.API_BASE)
         self.model = config.MODEL_NAME
         self.temperature = config.TEMPERATURE
         self.max_tokens = config.MAX_TOKENS
@@ -243,8 +244,9 @@ class LLMClient:
 
         try:
             # Load prompt template
-            template = self._load_prompt_template("emotion_prompt.txt")
-            prompt = template.format(lyrics=lyrics)
+            template_text = self._load_prompt_template("emotion_prompt.txt")
+            template = Template(template_text)
+            prompt = template.substitute(lyrics=lyrics)
 
             # Call LLM with progress indicator
             with progress("Analyzing emotions via API..."):
@@ -301,8 +303,9 @@ class LLMClient:
 
         try:
             # Load prompt template
-            template = self._load_prompt_template("melody_prompt.txt")
-            prompt = template.format(
+            template_text = self._load_prompt_template("melody_prompt.txt")
+            template = Template(template_text)
+            prompt = template.substitute(
                 emotion=emotion,
                 tempo=tempo,
                 time_signature=time_signature,

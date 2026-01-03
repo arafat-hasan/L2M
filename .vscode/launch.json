@@ -1,0 +1,16 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "l2m",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "l2m/main.py",
+      "console": "integratedTerminal",
+      "args": ["--lyrics", "Dancing in the moonlight", "--dry-run"]
+    }
+  ]
+}
