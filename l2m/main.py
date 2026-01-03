@@ -7,12 +7,14 @@ Provides command-line interface for converting lyrics to musical melodies.
 import argparse
 import sys
 from pathlib import Path
+from typing import Optional
 
 from l2m.config import config
 from l2m.llm.client import LLMClient
 from l2m.services.lyric_parser import LyricParser
 from l2m.services.melody_generator import MelodyGenerator
 from l2m.services.midi_writer import MIDIWriter
+from l2m.services.audio_renderer import AudioRenderer
 from l2m.utils.logger import get_logger
 from l2m.utils.path_utils import sanitize_filename
 from l2m.utils.input_validators import InputValidator
@@ -45,6 +47,7 @@ class LyricsToMelodyApp:
         self.llm_client = LLMClient()
         self.melody_generator = MelodyGenerator(self.llm_client)
         self.midi_writer = MIDIWriter()
+        self.audio_renderer = None  # Lazy initialization
 
         logger.info("All components initialized successfully")
 
@@ -52,7 +55,9 @@ class LyricsToMelodyApp:
         self,
         lyrics: str,
         output_name: str = "output",
-        dry_run: bool = False
+        dry_run: bool = False,
+        enable_audio: bool = False,
+        soundfont_path: Optional[str] = None
     ) -> None:
         """
         Process lyrics through the complete pipeline.
@@ -61,6 +66,8 @@ class LyricsToMelodyApp:
             lyrics: Input lyrics text
             output_name: Base name for output files (will be sanitized for security)
             dry_run: If True, only show analysis without generating files
+            enable_audio: If True, also generate audio files (WAV/MP3)
+            soundfont_path: Optional path to SoundFont file for audio rendering
 
         Raises:
             ValueError: If inputs fail validation
@@ -129,12 +136,38 @@ class LyricsToMelodyApp:
                 show_status("Dry run complete. No files generated.", "success")
                 return
 
+            # Determine total steps (4 base + 1 if audio enabled)
+            total_steps = 5 if enable_audio else 4
+
             # Step 4: Write output files
-            with step_progress(4, 4, "Writing Output Files"):
+            with step_progress(4, total_steps, "Writing Output Files"):
                 midi_path, xml_path = self.midi_writer.write_both(melody, safe_output_name)
 
             logger.info(f"✓ MIDI file: {midi_path}")
             logger.info(f"✓ MusicXML file: {xml_path}")
+
+            # Step 5: Render audio (optional)
+            audio_paths = {}
+            if enable_audio:
+                with step_progress(5, total_steps, "Rendering Audio"):
+                    try:
+                        # Initialize audio renderer if needed
+                        if self.audio_renderer is None:
+                            sf_path = Path(soundfont_path) if soundfont_path else None
+                            self.audio_renderer = AudioRenderer(soundfont_path=sf_path)
+
+                        # Render audio
+                        audio_paths = self.audio_renderer.render_all(midi_path, safe_output_name)
+
+                        for fmt, path in audio_paths.items():
+                            logger.info(f"✓ {fmt.upper()} file: {path}")
+                            show_status(f"Generated {fmt.upper()}: {path.name}", "success")
+
+                    except Exception as e:
+                        logger.warning(f"Audio rendering failed: {e}")
+                        show_status(f"Audio rendering failed: {e}", "warning")
+                        print(f"\nWARNING: Audio rendering failed: {e}")
+                        print("MIDI and MusicXML files were generated successfully.")
 
             # Success summary
             logger.info("\n" + "=" * 60)
@@ -143,6 +176,8 @@ class LyricsToMelodyApp:
             logger.info(f"Generated files:")
             logger.info(f"  - {midi_path}")
             logger.info(f"  - {xml_path}")
+            for fmt, path in audio_paths.items():
+                logger.info(f"  - {path}")
 
             # Print to console for user
             print("\n" + "=" * 60)
@@ -151,6 +186,8 @@ class LyricsToMelodyApp:
             print(f"Output files:")
             print(f"  MIDI:      {midi_path}")
             print(f"  MusicXML:  {xml_path}")
+            for fmt, path in audio_paths.items():
+                print(f"  {fmt.upper()}:      {path}")
             print(f"\nMelody info:")
             print(f"  Key:       {melody.key}")
             print(f"  Tempo:     {melody.tempo} BPM")
@@ -202,6 +239,19 @@ For more information, see README.md
         help="Show analysis and preview without generating files"
     )
 
+    parser.add_argument(
+        "--audio",
+        action="store_true",
+        help="Also generate audio file (WAV/MP3) from MIDI using FluidSynth"
+    )
+
+    parser.add_argument(
+        "--soundfont",
+        type=str,
+        help="Path to SoundFont (.sf2) file for audio rendering. "
+             "If not specified, uses SOUNDFONT_PATH from .env"
+    )
+
     args = parser.parse_args()
 
     # Create and run application
@@ -209,7 +259,9 @@ For more information, see README.md
     app.process_lyrics(
         lyrics=args.lyrics,
         output_name=args.out,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        enable_audio=args.audio,
+        soundfont_path=args.soundfont
     )
 
 

@@ -6,21 +6,23 @@ A complete, modular Python system that converts human lyrics into structured mel
 
 - **Intelligent Emotion Analysis**: Uses OpenAI's LLM to analyze lyrical emotion, tempo, and rhythm
 - **AI-Powered Melody Generation**: Creates melodies that match the emotional content of lyrics
+- **Audio Rendering**: Convert MIDI to high-quality WAV/MP3 audio using FluidSynth
 - **Fallback Heuristics**: Deterministic algorithms ensure robust operation even without LLM
-- **Multiple Output Formats**: Exports to both MIDI (.mid) and MusicXML (.musicxml)
+- **Multiple Output Formats**: Exports to MIDI (.mid), MusicXML (.musicxml), WAV (.wav), and MP3 (.mp3)
 - **Clean Architecture**: Modular design with clear separation of concerns
 - **Type-Safe**: Full type hints and Pydantic validation
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 
 ## Architecture
 
-The system follows a clean, modular architecture with five main stages:
+The system follows a clean, modular architecture with six main stages:
 
 1. **Lyrics Input & Parsing**: Text normalization and syllable estimation
 2. **Emotion & Rhythm Analysis**: LLM-based emotional classification and tempo detection
 3. **Melody Structure Generation**: AI-powered note and duration assignment
 4. **Music Notation**: Conversion to music21 internal representation
-5. **Output**: Export to MIDI and MusicXML formats
+5. **MIDI/MusicXML Export**: Standard music notation file formats
+6. **Audio Rendering** (Optional): High-quality audio synthesis using FluidSynth
 
 ## Installation
 
@@ -28,6 +30,10 @@ The system follows a clean, modular architecture with five main stages:
 
 - Python 3.9 or higher
 - OpenAI API key
+- **For audio rendering (optional)**:
+  - FluidSynth: `brew install fluid-synth` (macOS) or `sudo apt-get install fluidsynth` (Linux)
+  - FFmpeg (for MP3): `brew install ffmpeg` (macOS) or `sudo apt-get install ffmpeg` (Linux)
+  - A SoundFont file (.sf2) - see [Audio Setup](#audio-setup) below
 
 ### Option 1: Install as Package (Recommended)
 
@@ -92,7 +98,30 @@ OPENAI_API_KEY=your_api_key_here
 MODEL_NAME=gpt-4o-mini
 TEMPERATURE=0.7
 MAX_TOKENS=1500
+
+# Optional: Audio rendering configuration
+SOUNDFONT_PATH=l2m/assets/soundfonts/GeneralUser_GS_v1.471.sf2
+AUDIO_SAMPLE_RATE=44100
+AUDIO_FORMAT=wav  # Options: wav, mp3, both
 ```
+
+### Audio Setup
+
+To enable audio rendering, you need a SoundFont file:
+
+1. **Download a free SoundFont** (recommended: GeneralUser GS):
+   ```bash
+   cd l2m/assets/soundfonts/
+   curl -L -O http://www.schristiancollins.com/soundfonts/GeneralUser_GS_1.471.zip
+   unzip GeneralUser_GS_1.471.zip
+   ```
+
+2. **Configure the path** in `.env`:
+   ```bash
+   SOUNDFONT_PATH=l2m/assets/soundfonts/GeneralUser_GS_1.471/GeneralUser_GS_v1.471.sf2
+   ```
+
+See `l2m/assets/soundfonts/README.md` for more SoundFont options.
 
 ## Usage
 
@@ -140,20 +169,46 @@ l2m --lyrics "Stars will guide me home" --dry-run
 python run.py --lyrics "Stars will guide me home" --dry-run
 ```
 
+### Audio Generation (NEW!)
+
+Generate playable audio files from your melodies:
+
+```bash
+# Generate MIDI + WAV audio
+python run.py --lyrics "The sun will rise again" --audio
+
+# Generate MIDI + MP3 audio
+python run.py --lyrics "Dancing in the moonlight" --audio --out dance
+
+# Use a custom SoundFont
+python run.py --lyrics "Stars guide me" --audio --soundfont path/to/custom.sf2
+```
+
+Output files:
+- `l2m/output/output.mid` - MIDI file
+- `l2m/output/output.musicxml` - MusicXML file  
+- `l2m/output/output.wav` - Audio file (WAV or MP3 based on config)
+
 ### More Examples
 
 ```bash
 # Happy, upbeat lyrics
 python run.py --lyrics "Sunshine and rainbows fill the sky, dancing together you and I"
 
-# Sad, melancholic lyrics
-python run.py --lyrics "Memories fade like photographs left in the rain"
+# Sad, melancholic lyrics with audio
+python run.py --lyrics "Memories fade like photographs left in the rain" --audio
 
 # Hopeful lyrics
 python run.py --lyrics "Tomorrow brings a brand new day, hope will light the way"
 ```
 
 **Note:** Replace `python run.py` with `l2m` if you installed as a package.
+
+## Play Audio
+
+```bash
+afplay l2m/output/output.wav
+```
 
 ## Project Structure
 
@@ -177,7 +232,11 @@ l2m/
 ├── services/
 │   ├── lyric_parser.py          # Lyrics normalization & syllable estimation
 │   ├── melody_generator.py      # Melody generation with fallbacks
-│   └── midi_writer.py           # MIDI/MusicXML export
+│   ├── midi_writer.py           # MIDI/MusicXML export
+│   └── audio_renderer.py        # Audio rendering (WAV/MP3)
+│
+├── assets/
+│   └── soundfonts/              # SoundFont files for audio rendering
 │
 ├── utils/
 │   ├── logger.py                # Logging configuration
@@ -185,7 +244,8 @@ l2m/
 │
 ├── tests/
 │   ├── test_emotion_analysis.py
-│   └── test_melody_generation.py
+│   ├── test_melody_generation.py
+│   └── test_audio_renderer.py
 │
 ├── output/                      # Generated files
 └── logs/                        # System logs

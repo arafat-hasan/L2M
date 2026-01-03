@@ -173,6 +173,8 @@ class Config:
     OUTPUT_DIR: Path = PROJECT_ROOT / "output"
     LOGS_DIR: Path = PROJECT_ROOT / "logs"
     PROMPTS_DIR: Path = PROJECT_ROOT / "llm" / "prompts"
+    ASSETS_DIR: Path = PROJECT_ROOT / "assets"
+    SOUNDFONTS_DIR: Path = ASSETS_DIR / "soundfonts"
 
     # Musical Defaults (Fallback Values)
     DEFAULT_TEMPO: int = 100
@@ -235,6 +237,14 @@ class Config:
         "B minor": ["B", "C#", "D", "E", "F#", "G", "A"],
         "F# minor": ["F#", "G#", "A", "B", "C#", "D", "E"]
     }
+
+    # Audio Rendering Configuration
+    SOUNDFONT_PATH: Optional[Path] = (
+        Path(os.getenv("SOUNDFONT_PATH")) if os.getenv("SOUNDFONT_PATH") else None
+    )
+    AUDIO_SAMPLE_RATE: int = _safe_int("AUDIO_SAMPLE_RATE", 44100, 8000, 192000)
+    AUDIO_FORMAT: str = os.getenv("AUDIO_FORMAT", "wav")  # wav, mp3, or both
+    ENABLE_AUDIO_EXPORT: bool = os.getenv("ENABLE_AUDIO_EXPORT", "true").lower() == "true"
 
     # Logging Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
