@@ -98,7 +98,6 @@ L2M Thesis Defense Presentation
 
 <!-- _class: lead -->
 
-# **Part 1**
 ## Background & Related Work
 
 ---
@@ -144,20 +143,19 @@ L2M Thesis Defense Presentation
 
 **Existing systems lack:**
 
-❌ Accessibility (require training data)
-❌ Robustness (no fallback mechanisms)
-❌ Practical deployment (complex setup)
-❌ Multi-format output
+- Accessibility (require training data)
+- Robustness (no fallback mechanisms)
+- Practical deployment (complex setup)
+- Multi-format output
 
 <br/>
 
-**✓ L2M addresses all these gaps**
+**L2M addresses all these gaps**
 
 ---
 
 <!-- _class: lead -->
 
-# **Part 2**
 ## System Architecture
 
 ---
@@ -250,7 +248,6 @@ L2M Thesis Defense Presentation
 
 <!-- _class: lead -->
 
-# **Part 3**
 ## Implementation
 
 ---
@@ -312,7 +309,6 @@ Synthesizes playable audio from MIDI
 
 <!-- _class: lead -->
 
-# **Part 4**
 ## Evaluation & Results
 
 ---
@@ -410,7 +406,6 @@ G4 → A4 → B4 → C5 → B4 → A4
 
 <!-- _class: lead -->
 
-# **Part 5**
 ## Future Directions
 
 ---
