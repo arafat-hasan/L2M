@@ -22,8 +22,12 @@ L2M Thesis Defense Presentation
 
 <br/>
 
-**Arafat Hasan**
+**Arafat Hasan**  
+Student ID: CE-210926
+
 *M.Eng. Project Defense*
+
+Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 
 ---
 
