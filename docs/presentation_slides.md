@@ -27,6 +27,19 @@ L2M Thesis Defense Presentation
 
 ---
 
+## Agenda
+
+<br/>
+
+1. **Background & Related Work**
+2. **System Architecture**
+3. **Implementation**
+4. **Evaluation & Results**
+5. **Future Directions**
+6. **Conclusion**
+
+---
+
 ## The Challenge
 
 <br/>
@@ -53,11 +66,11 @@ L2M Thesis Defense Presentation
 ✓ Analyzes lyrical emotion & rhythm
 ✓ Generates aligned melodies
 ✓ Exports to standard formats (MIDI, MusicXML, Audio)
-✓ Operates robustly with intelligent fallbacks
+✓ Simple, modular architecture
 
 <br/>
 
-**No training required** • **Production-ready** • **Open-source**
+**No training required** • **Open-source**
 
 ---
 
@@ -80,19 +93,7 @@ L2M Thesis Defense Presentation
 
 *From words to music in seconds*
 
----
 
-## Agenda
-
-<br/>
-
-1. **Background & Motivation**
-2. **Related Work**
-3. **System Architecture**
-4. **Implementation Details**
-5. **Evaluation & Results**
-6. **Future Work**
-7. **Conclusion**
 
 ---
 
@@ -127,13 +128,13 @@ L2M Thesis Defense Presentation
 | Year | Approach | Limitation |
 |------|----------|------------|
 | 2018 | Seq2Seq LSTMs | Requires large training datasets |
-| 2022 | ReLyMe (Hybrid) | Partial fallback support |
-| 2023 | Controllable L2M | Complex, limited robustness |
-| 2025 | SongComposer | Needs fine-tuning, no fallback |
+| 2022 | ReLyMe (Hybrid) | Needs training data, complex setup |
+| 2023 | Controllable L2M | Requires fine-tuning, limited formats |
+| 2025 | SongComposer | Needs fine-tuning, complex architecture |
 
 <br/>
 
-**→ Our work: Pre-trained LLM + No training + Full fallback**
+**→ Our work: Pre-trained LLM + No training + Multi-format output**
 
 ---
 
@@ -144,9 +145,9 @@ L2M Thesis Defense Presentation
 **Existing systems lack:**
 
 - Accessibility (require training data)
-- Robustness (no fallback mechanisms)
-- Practical deployment (complex setup)
-- Multi-format output
+- Simplicity (complex architectures)
+- Practical deployment (difficult setup)
+- Complete output support (limited formats)
 
 <br/>
 
@@ -201,12 +202,6 @@ L2M Thesis Defense Presentation
 - Natural melodic contours
 - Chunking for long lyrics (>30 syllables)
 
-<br/>
-
-### **Intelligent Fallback**
-- Deterministic algorithms
-- Emotion-to-key mappings
-- Contour patterns (ascending, descending, wavy...)
 
 ---
 
@@ -258,7 +253,7 @@ L2M Thesis Defense Presentation
 
 **Core Technologies:**
 - Python 3.9+ (Type-safe, clean architecture)
-- OpenAI GPT-4o-mini (LLM engine)
+- LLM engine
 - music21 (Music notation library)
 - Pydantic v2 (Data validation)
 
@@ -275,7 +270,7 @@ L2M Thesis Defense Presentation
 <br/>
 
 ### **1. LLMClient**
-Manages OpenAI API with retry logic & fallbacks
+Manages OpenAI API with retry logic
 
 ### **2. MelodyGenerator**  
 Orchestrates melody creation with chunking
@@ -285,25 +280,6 @@ Converts IR to standard music formats
 
 ### **4. AudioRenderer**
 Synthesizes playable audio from MIDI
-
----
-
-## Prompt Engineering
-
-<br/>
-
-**Carefully crafted prompts with:**
-
-1. Clear task descriptions
-2. **Few-shot examples** (3 per task)
-3. Explicit JSON schemas
-4. Constraint enforcement
-   - *"Generate EXACTLY N notes for N syllables"*
-5. Format validation reminders
-
-<br/>
-
-> *Prompt quality directly impacts output quality*
 
 ---
 
@@ -317,11 +293,11 @@ Synthesizes playable audio from MIDI
 
 <br/>
 
-**Test Dataset:** 20 diverse lyrical inputs
+**Test Dataset:** diverse lyrical inputs
 
-- **Emotions:** Happy (5), Sad (5), Hopeful (4), Tense (3), Calm (2), Excited (1)
-- **Length:** Short (5), Medium (10), Long (5)
-- **Complexity:** Simple (10), Poetic (10)
+- **Emotions:** Happy, Sad, Hopeful, Tense, Calm, Excited
+- **Length:** Short, Medium, Long
+- **Complexity:** Simple, Poetic
 
 <br/>
 
@@ -330,24 +306,6 @@ Synthesizes playable audio from MIDI
 - Emotion-key consistency
 - Tempo appropriateness
 - Musical validity
-
----
-
-## Results Summary
-
-<br/>
-
-| Metric | Score | Status |
-|--------|-------|--------|
-| **Syllable-Note Alignment** | 100% | Perfect |
-| **Emotion-Key Consistency** | 95% | Excellent |
-| **Tempo Appropriateness** | 90% | Strong |
-| **Musical Validity** | 100% | Perfect |
-
-<br/>
-
-**LLM Success Rate:** 85%
-**Fallback Activation:** 15%
 
 ---
 
@@ -379,7 +337,7 @@ G4 → A4 → B4 → C5 → B4 → A4
 
 **Perfect alignment** - 100% syllable matching
 **Emotional coherence** - Strong sentiment correlation
-**Robust operation** - Zero failures with fallbacks
+**Zero-training approach** - Uses pre-trained LLM
 **Standard formats** - Works with all music software
 **Fast processing** - ~3 seconds average
 
@@ -393,7 +351,7 @@ G4 → A4 → B4 → C5 → B4 → A4
 
 <br/>
 
-- **Harmonic simplicity** - Single-voice only (no chords)
+- **Harmonic simplicity** - Single melody only (no chords)
 - **Style constraints** - Western music theory focused
 - **Long-form coherence** - Very long lyrics (>50 syllables) may show inconsistencies
 - **LLM dependency** - Requires API access & costs per request
@@ -422,7 +380,6 @@ G4 → A4 → B4 → C5 → B4 → A4
 <br/>
 
 ### **Technical Improvements**
-- Local LLM support (reduce API dependency)
 - Multi-language lyrics
 - Non-Western music systems
 
@@ -445,15 +402,15 @@ G4 → A4 → B4 → C5 → B4 → A4
 
 <br/>
 
-1. **Novel LLM Application** - First to use GPT for lyrics-to-melody without fine-tuning
+1. **Zero Training Required** - Uses pre-trained LLM (no dataset collection, no model training, no fine-tuning)
 
-2. **Hybrid Architecture** - AI + deterministic fallbacks for reliability
+2. **Instant Deployment** - Simple setup with `pip install` and API key, ready to use in minutes
 
-3. **Production System** - Complete, type-safe implementation with CLI & API
+3. **Complete Output Pipeline** - End-to-end solution: MIDI + MusicXML + Audio (WAV/MP3) rendering
 
-4. **Multi-Format Output** - MIDI, MusicXML, and audio rendering
+4. **Production-Ready CLI** - Type-safe, installable package with comprehensive documentation
 
-5. **Open Source** - Available for research and practical use
+5. **Accessible & Extensible** - Open source with modular architecture for easy customization
 
 ---
 

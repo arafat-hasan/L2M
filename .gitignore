@@ -1,6 +1,6 @@
 # L2M
 l2m/output/
-lyrics.txt
+lyrics*.txt
 
 # Logs
 logs/
