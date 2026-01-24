@@ -31,6 +31,22 @@ Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 
 ---
 
+## Project Overview
+
+**What is L2M?**  
+An AI-powered system that automatically converts song lyrics into musical melodies
+
+**The Problem**  
+Traditional melody composition requires musical expertise and is time-consuming
+
+**Our Approach**  
+Leverage pre-trained Large Language Models to analyze emotional content and generate musically-aligned melodies without any training data
+
+**Result**  
+Production-ready tool generating MIDI, MusicXML, and audio files in seconds
+
+---
+
 ## Agenda
 
 <br/>
@@ -92,8 +108,6 @@ Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 - **Tempo:** 90 BPM  
 - **Key:** G major
 - **Melody:** 6 notes perfectly aligned
-
-<br/>
 
 *From words to music in seconds*
 
@@ -186,8 +200,6 @@ Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 - Syllable estimation
 - Phrase segmentation
 
-<br/>
-
 ### **Emotion Analysis** (LLM-powered)
 - Emotion classification (*happy, sad, hopeful, tense...*)
 - Tempo detection (40-200 BPM)
@@ -236,8 +248,6 @@ Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 - Tempo & key metadata
 - Time signature handling
 
-<br/>
-
 ### **Export Formats**
 - **MIDI** (.mid) - Standard sequencer format
 - **MusicXML** (.musicxml) - Sheet music
@@ -269,24 +279,6 @@ Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 
 ---
 
-## Key Components
-
-<br/>
-
-### **1. LLMClient**
-Manages OpenAI API with retry logic
-
-### **2. MelodyGenerator**  
-Orchestrates melody creation with chunking
-
-### **3. MIDIWriter**
-Converts IR to standard music formats
-
-### **4. AudioRenderer**
-Synthesizes playable audio from MIDI
-
----
-
 <!-- _class: lead -->
 
 ## Evaluation & Results
@@ -302,8 +294,6 @@ Synthesizes playable audio from MIDI
 - **Emotions:** Happy, Sad, Hopeful, Tense, Calm, Excited
 - **Length:** Short, Medium, Long
 - **Complexity:** Simple, Poetic
-
-<br/>
 
 **Metrics:**
 - Syllable-note alignment accuracy
@@ -328,8 +318,6 @@ Synthesizes playable audio from MIDI
 ```
 G4 → A4 → B4 → C5 → B4 → A4
 ```
-
-<br/>
 
 *Ascending then descending arch - emotionally appropriate*
 
@@ -404,7 +392,6 @@ G4 → A4 → B4 → C5 → B4 → A4
 
 ## Key Contributions
 
-<br/>
 
 1. **Zero Training Required** - Uses pre-trained LLM (no dataset collection, no model training, no fine-tuning)
 
