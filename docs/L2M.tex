@@ -344,7 +344,7 @@ Extensibility   & Service interfaces allow drop-in replacement (LLM provider, au
 Data transformations across the pipeline are:
 \texttt{str} $\to$ \texttt{NormalizedLyrics} $\to$ \texttt{EmotionAnalysis} $\to$
 \texttt{MelodyStructure} $\to$ \texttt{Melody IR} $\to$ \texttt{music21.stream.Stream}
-$\to$ MIDI / MusicXML / WAV / MP3 files.
+$\to$ \texttt{MIDI/MusicXML/WAV/MP3 files}.
 Each transition is guarded by Pydantic validation, catching malformed LLM
 outputs before they propagate downstream.
 
