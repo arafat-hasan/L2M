@@ -19,6 +19,8 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,shapes.geometric,positioning,fit,backgrounds}
 
 % ---------------------------------------------------------------
 % Listings style for JSON / code snippets
@@ -32,14 +34,6 @@
   keywordstyle=\color{blue},
   stringstyle=\color{teal},
   commentstyle=\color{gray},
-  showstringspaces=false,
-  columns=fullflexible,
-}
-
-\lstdefinestyle{pipelineStyle}{
-  basicstyle=\ttfamily\scriptsize,
-  breaklines=true,
-  frame=none,
   showstringspaces=false,
   columns=fullflexible,
 }
@@ -245,29 +239,81 @@ pipeline always produces output.
 
 \begin{figure}[htbp]
 \centering
-\begin{lstlisting}[style=pipelineStyle]
-Lyrics Input
-    |
-    v
-[Stage 1] Lyrics Parsing
-    |  Normalized text + phrase structure
-    v
-[Stage 2] Emotion & Rhythm Analysis  <--- LLM Call 1
-    |  EmotionAnalysis {emotion, tempo, time_sig, phrases[]}
-    v
-[Stage 3] Melody Structure Generation  <--- LLM Call 2
-    |  MelodyStructure {key, melody[{note, duration, velocity}]}
-    v
-[Stage 4] Internal Representation Building
-    |  Melody IR {NoteEvent[], tempo, time_sig}
-    v
-[Stage 5] MIDI / MusicXML Export
-    |  .mid + .musicxml files
-    v
-[Stage 6] Audio Rendering (Optional)
-       .wav / .mp3 files
-\end{lstlisting}
-\caption{L2M Six-Stage Sequential Pipeline.}
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  node distance = 0.45cm and 1.0cm,
+  %--- box styles ---
+  stage/.style={
+    rectangle, rounded corners=4pt,
+    draw=black!55, fill=gray!8, thick,
+    minimum width=5.6cm, minimum height=0.72cm,
+    align=center, font=\small
+  },
+  llmstage/.style={
+    stage, fill=blue!10, draw=blue!55!black
+  },
+  optstage/.style={
+    stage, draw=black!40, dashed, fill=gray!4
+  },
+  io/.style={
+    ellipse, draw=black!60, thick, fill=white,
+    minimum width=3.8cm, minimum height=0.58cm,
+    align=center, font=\small
+  },
+  %--- annotation badges ---
+  llmbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=blue!55!black, fill=blue!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  fbbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=orange!65!black, fill=orange!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  %--- arrows ---
+  arr/.style={-{Stealth[length=5pt,width=4pt]}, thick, black!65},
+  sidearr/.style={-{Stealth[length=3.5pt,width=3pt]}, thin, dashed},
+  %--- data-type labels on arrows ---
+  dtlabel/.style={font=\scriptsize\ttfamily, text=black!55, inner sep=1pt},
+]
+
+%% ---- Main nodes (top to bottom) ----
+\node[io]                    (in)  {Lyrics Text};
+\node[stage,   below=of in]  (s1)  {\textbf{Stage 1}\enspace Lyrics Parsing};
+\node[llmstage,below=of s1]  (s2)  {\textbf{Stage 2}\enspace Emotion \& Rhythm Analysis};
+\node[llmstage,below=of s2]  (s3)  {\textbf{Stage 3}\enspace Melody Structure Generation};
+\node[stage,   below=of s3]  (s4)  {\textbf{Stage 4}\enspace Internal Representation};
+\node[stage,   below=of s4]  (s5)  {\textbf{Stage 5}\enspace MIDI\,/\,MusicXML Export};
+\node[optstage,below=of s5]  (s6)  {\textbf{Stage 6}\enspace Audio Rendering\;{\small\itshape(optional)}};
+
+%% ---- Main arrows ----
+\draw[arr] (in) -- (s1);
+\draw[arr] (s1) -- node[dtlabel,right=2pt]{\texttt{NormalizedLyrics}} (s2);
+\draw[arr] (s2) -- node[dtlabel,right=2pt]{\texttt{EmotionAnalysis}}  (s3);
+\draw[arr] (s3) -- node[dtlabel,right=2pt]{\texttt{MelodyStructure}}  (s4);
+\draw[arr] (s4) -- node[dtlabel,right=2pt]{\texttt{Melody IR}}        (s5);
+\draw[arr] (s5) -- node[dtlabel,right=2pt]{\texttt{.mid\;/\;.musicxml}} (s6);
+
+%% ---- LLM badges (right side) ----
+\node[llmbadge, right=0.65cm of s2] (llm1) {LLM Call\,1};
+\draw[sidearr, blue!55!black] (llm1.west) -- (s2.east);
+
+\node[llmbadge, right=0.65cm of s3] (llm2) {LLM Call\,2};
+\draw[sidearr, blue!55!black] (llm2.west) -- (s3.east);
+
+%% ---- Fallback badges (left side) ----
+\node[fbbadge, left=0.65cm of s2] (fb2) {Fallback};
+\draw[sidearr, orange!65!black] (fb2.east) -- (s2.west);
+
+\node[fbbadge, left=0.65cm of s3] (fb3) {Fallback};
+\draw[sidearr, orange!65!black] (fb3.east) -- (s3.west);
+
+\end{tikzpicture}
+}% end resizebox
+\caption{L2M six-stage sequential pipeline. Blue stages invoke LLM API
+calls; each has a deterministic fallback (orange). Stage~6 (dashed) is
+optional and requires FluidSynth.}
 \label{fig:pipeline}
 \end{figure}
 
