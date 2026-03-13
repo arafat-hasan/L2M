@@ -66,7 +66,7 @@
     \textit{Department of Computer Science and Engineering}\\
     \textit{Mawlana Bhashani Science and Technology University}\\
     Tangail, Bangladesh\\
-    mm73rahman@gmail.com
+    motiurcse@mbstu.ac.bd
   }
 }
 
@@ -105,8 +105,6 @@ Generation
 % ---------------------------------------------------------------
 \section{Introduction}
 
-\subsection{Motivation}
-
 Music composition at the intersection of language and music requires
 simultaneous understanding of semantic meaning, emotional intent, syllabic
 rhythm, and musical structure. The task of \textbf{lyrics-to-melody (L2M)
@@ -138,8 +136,6 @@ analysis, and transcribed lyrics---opens a compelling alternative: can the
 emergent reasoning capabilities of LLMs be applied zero-shot to generate
 musically coherent melodies from lyrics?
 
-\subsection{Problem Statement}
-
 This work develops an \textbf{end-to-end system} that:
 \begin{itemize}
   \item Accepts arbitrary lyrical text as input with no prior training on
@@ -151,20 +147,11 @@ This work develops an \textbf{end-to-end system} that:
         LLM calls fail.
 \end{itemize}
 
-% ---------------------------------------------------------------
-% 1.3 Related Work (merged into Introduction)
-% ---------------------------------------------------------------
-\subsection{Related Work}
-
-\subsubsection{Generative Models for Music Composition}
-
 Deep learning approaches to symbolic music generation have employed LSTM, GAN,
 VAE, and Transformer architectures to model hierarchical temporal structures in
 music \cite{briot2020}. These foundational methods capture sequential
 dependencies and latent musical representations, forming the algorithmic basis
 for lyric-conditioned systems.
-
-\subsubsection{Lyrics-to-Melody Generation}
 
 \textbf{Neural Melody Composition from Lyrics} \cite{bao2018} introduced one
 of the earliest Seq2Seq neural frameworks for joint lyrics-melody generation
@@ -194,8 +181,6 @@ sequences, improving robustness in real-world scenarios.
 self-supervised contrastive learning to build shared embedding spaces across
 modalities, demonstrating the importance of strong cross-modal representations.
 
-\subsubsection{Text-to-Music and Broader Multimodal Generation}
-
 Recent comprehensive reviews of AI-enabled text-to-music generation \cite{li2025}
 classify systems along symbolic vs. audio synthesis axes and identify persistent
 challenges: long-term coherence, data scarcity, and limited expressiveness.
@@ -204,8 +189,6 @@ text descriptions, but differ from our task in that they do not enforce
 syllabic alignment with lyrical text. Transformer-based lyric generation
 approaches \cite{mediakov2024} and LSTM-based approaches \cite{gill2020}
 established baselines for sequential lyric modeling.
-
-\subsubsection{Research Gap}
 
 Existing lyrics-to-melody systems share one or more of the following
 limitations:
@@ -218,9 +201,34 @@ limitations:
   \item Are not available as deployable, open-source software packages.
 \end{itemize}
 
-Our approach directly addresses all five gaps through zero-shot LLM prompting,
-deterministic fallbacks, multi-format output, explicit emotion-music mappings,
-and open-source deployment.
+This paper presents \textbf{L2M}, a system that directly addresses all five
+gaps. The principal contributions are:
+
+\begin{enumerate}
+  \item \textbf{Two-Stage LLM Pipeline.} A novel decomposition of the
+        lyrics-to-melody task into (a) emotion and rhythm analysis and (b)
+        conditioned melody generation, each handled by separate LLM calls with
+        structured JSON output schemas---enabling interpretability and targeted
+        fallback at each stage.
+
+  \item \textbf{Emotion-Aware Alignment.} An explicit mapping from detected
+        emotion categories to musical keys, tempo ranges, and melodic contour
+        patterns, grounding LLM-generated output in music theory principles.
+
+  \item \textbf{Hybrid Reliability Architecture.} Combination of zero-shot LLM
+        generation with deterministic heuristic fallbacks, achieving 100\%
+        system reliability across all tested inputs.
+
+  \item \textbf{Prompt Engineering Methodology.} Structured few-shot prompts
+        with explicit output schemas, constraint enforcement (\textit{``EXACTLY
+        $N$ notes for $N$ syllables''}), and contextual carryover across
+        long-lyric chunks---providing a reusable template for other cross-modal
+        LLM tasks.
+
+  \item \textbf{Open-Source Baseline.} A production-ready Python package with
+        CLI, programmatic API, multi-format output, and comprehensive
+        logging---providing a reproducible baseline for the research community.
+\end{enumerate}
 
 % ---------------------------------------------------------------
 % 2. System Architecture
@@ -598,37 +606,6 @@ Separating emotion analysis from melody generation provides two benefits:
 before melody generation; (b) targeted fallback---if only melody generation
 fails, the correct emotional context is preserved for the fallback generator.
 
-\subsection{Contributions}
-
-This work makes the following contributions to the field of LLM-based music
-generation research:
-
-\begin{enumerate}
-  \item \textbf{Two-Stage LLM Pipeline.} A novel decomposition of the
-        lyrics-to-melody task into (a) emotion and rhythm analysis and (b)
-        conditioned melody generation, each handled by separate LLM calls with
-        structured JSON output schemas---enabling interpretability and targeted
-        fallback at each stage.
-
-  \item \textbf{Emotion-Aware Alignment.} An explicit mapping from detected
-        emotion categories to musical keys, tempo ranges, and melodic contour
-        patterns, grounding LLM-generated output in music theory principles.
-
-  \item \textbf{Hybrid Reliability Architecture.} Combination of zero-shot LLM
-        generation with deterministic heuristic fallbacks, achieving 100\%
-        system reliability across all tested inputs.
-
-  \item \textbf{Prompt Engineering Methodology.} Structured few-shot prompts
-        with explicit output schemas, constraint enforcement (\textit{``EXACTLY
-        $N$ notes for $N$ syllables''}), and contextual carryover across
-        long-lyric chunks---providing a reusable template for other cross-modal
-        LLM tasks.
-
-  \item \textbf{Open-Source Baseline.} A production-ready Python package with
-        CLI, programmatic API, multi-format output, and comprehensive
-        logging---providing a reproducible baseline for the research community.
-\end{enumerate}
-
 \subsection{Limitations}
 
 \begin{enumerate}
@@ -692,21 +669,11 @@ multi-language syllabification; and (5) developing a web-based GUI with
 real-time playback and an iterative refinement loop.
 
 % ---------------------------------------------------------------
-% Acknowledgment
-% ---------------------------------------------------------------
-\section*{Acknowledgment}
-
-This work was supported by guidance from Dr.\ Mohammad Motiur Rahman. The
-authors acknowledge OpenAI for API access, the music21 development team for
-music notation infrastructure, and the Pydantic and FluidSynth communities for
-foundational tools used in this implementation.
-
-% ---------------------------------------------------------------
 % References
 % ---------------------------------------------------------------
 \bibliographystyle{IEEEtran}
 
-\begin{thebibliography}{13}
+\begin{thebibliography}{12}
 
 \bibitem{briot2020}
 J.-P. Briot, G. Hadjeres, and F. Pachet,
@@ -772,12 +739,6 @@ OpenAI Research, 2024.
 M. S. Cuthbert and C. Ariza,
 ``music21: A Toolkit for Computer-Aided Musicology and Symbolic Music Data,''
 in \textit{Proc. Int. Soc. Music Inf. Retrieval Conf. (ISMIR)}, 2010.
-
-\bibitem{brown2020}
-T. Brown et al.,
-``Language Models Are Few-Shot Learners,''
-in \textit{Advances in Neural Information Processing Systems (NeurIPS)},
-vol.\ 33, 2020.
 
 \end{thebibliography}
 

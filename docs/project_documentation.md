@@ -12,8 +12,6 @@ We present **L2M**, a lyrics-to-melody generation system that leverages Large La
 
 ## 1. Introduction
 
-### 1.1 Motivation
-
 Music composition at the intersection of language and music requires simultaneous understanding of semantic meaning, emotional intent, syllabic rhythm, and musical structure. The task of **lyrics-to-melody (L2M) generation** — producing a singable melodic sequence from lyrical text — is particularly demanding, imposing four tightly coupled requirements on any generation system.
 
 Effective lyrics-to-melody generation demands **semantic understanding** of lyrical content and emotional register: the system must interpret not merely the denotative meaning of words but the affective intent and thematic atmosphere embedded in the text. Equally essential is precise **syllabic alignment** — every phonetic syllable must correspond to exactly one musical note, preserving the natural cadence of the sung phrase and ensuring singability.
@@ -21,8 +19,6 @@ Effective lyrics-to-melody generation demands **semantic understanding** of lyri
 Beyond these text-level constraints, the output must exhibit **musical coherence**: a well-chosen key, consistent tempo, appropriate mode, and a melodic contour that forms a satisfying phrase arc within the conventions of tonal music. Finally, and most critically, the melody must achieve **emotional consistency** — the affective character of the musical output must reinforce, rather than contradict, the sentiment expressed in the lyrics.
 
 Traditional rule-based approaches lack the flexibility to handle the richness of natural language, while supervised deep learning approaches (Seq2Seq, Transformer-based) require large paired lyrics-melody datasets that are difficult and expensive to curate. The emergence of Large Language Models trained on vast corpora—including music theory texts, song analysis, and transcribed lyrics—opens a compelling alternative: can the emergent reasoning capabilities of LLMs be applied zero-shot to generate musically coherent melodies from lyrics?
-
-### 1.2 Problem Statement
 
 This work develops an **end-to-end system** that:
 
@@ -32,13 +28,7 @@ This work develops an **end-to-end system** that:
 - Exports results in standard music notation formats (MIDI, MusicXML)
 - Maintains robust operation via deterministic fallback heuristics when LLM calls fail
 
-### 1.3 Related Work
-
-#### 1.3.1 Generative Models for Music Composition
-
 Deep learning approaches to symbolic music generation have employed LSTM, GAN, VAE, and Transformer architectures to model hierarchical temporal structures in music [1]. These foundational methods capture sequential dependencies and latent musical representations, forming the algorithmic basis for lyric-conditioned systems.
-
-#### 1.3.2 Lyrics-to-Melody Generation
 
 **Neural Melody Composition from Lyrics** [2] introduced one of the earliest Seq2Seq neural frameworks for joint lyrics-melody generation using syllable-level alignment on pop music corpora. This work demonstrated feasibility but required large paired datasets.
 
@@ -52,13 +42,9 @@ Deep learning approaches to symbolic music generation have employed LSTM, GAN, V
 
 **Contrastive melody-lyrics alignment** [7] uses self-supervised contrastive learning to build shared embedding spaces across modalities, demonstrating the importance of strong cross-modal representations for both generation and retrieval tasks.
 
-#### 1.3.3 Text-to-Music and Broader Multimodal Generation
-
 Recent comprehensive reviews of AI-enabled text-to-music generation [8] classify systems along symbolic vs. audio synthesis axes and identify persistent challenges: long-term coherence, data scarcity, and limited expressiveness beyond simple harmonic structures. Systems like MusicLM and AudioCraft demonstrate powerful audio generation from text descriptions, but differ from our task in that they do not enforce syllabic alignment with lyrical text.
 
 Transformer-based lyric generation approaches [9] have applied models such as T5 with contrastive decoding for lyric text creation, while LSTM-based approaches [10] established baselines for sequential lyric modeling.
-
-#### 1.3.4 Research Gap
 
 Existing lyrics-to-melody systems share one or more of the following limitations:
 
@@ -68,11 +54,17 @@ Existing lyrics-to-melody systems share one or more of the following limitations
 - Apply no explicit emotion-to-key grounding in the generation process
 - Are not available as deployable, open-source software packages
 
-**Our approach** directly addresses all five gaps through zero-shot LLM prompting, deterministic fallbacks, multi-format output, explicit emotion-music mappings, and open-source deployment.
+This paper presents **L2M**, a system that directly addresses all five gaps. The principal contributions are:
 
-### 1.4 Paper Organization
+1. **Two-Stage LLM Pipeline**: A novel decomposition of the lyrics-to-melody task into (a) emotion and rhythm analysis and (b) conditioned melody generation, each handled by separate LLM calls with structured JSON output schemas — enabling interpretability and targeted fallback at each stage.
 
-Section 2 describes the system architecture. Section 3 details the methodology, including prompt design and fallback strategy. Section 4 presents evaluation results. Section 5 discusses findings, contributions, and limitations. Section 6 concludes with future directions.
+2. **Emotion-Aware Alignment**: An explicit mapping from detected emotion categories to musical keys, tempo ranges, and melodic contour patterns, grounding LLM-generated output in music theory principles.
+
+3. **Hybrid Reliability Architecture**: Combination of zero-shot LLM generation with deterministic heuristic fallbacks, achieving 100% system reliability across all tested inputs.
+
+4. **Prompt Engineering Methodology**: Structured few-shot prompts with explicit output schemas, constraint enforcement ("EXACTLY N notes for N syllables"), and contextual carryover across long-lyric chunks — providing a reusable template for other cross-modal LLM tasks.
+
+5. **Open-Source Baseline**: A production-ready Python package with CLI, programmatic API, multi-format output, and comprehensive logging — providing a reproducible baseline for the research community.
 
 ---
 
@@ -360,21 +352,7 @@ All 3 fallback-generated melodies passed MIDI validity checks. Qualitative revie
 
 **Finding 4 — Two-Stage Decomposition:** Separating emotion analysis from melody generation provides two benefits: (a) interpretability — users can inspect and override the emotion reading before melody generation; (b) targeted fallback — if only melody generation fails, the correct emotional context is preserved for the fallback generator.
 
-### 5.2 Contributions
-
-This work makes the following contributions to the field of LLM-based music generation research:
-
-1. **Two-Stage LLM Pipeline**: A novel decomposition of the lyrics-to-melody task into (a) emotion and rhythm analysis and (b) conditioned melody generation, each handled by separate LLM calls with structured JSON output schemas — enabling interpretability and targeted fallback at each stage.
-
-2. **Emotion-Aware Alignment**: An explicit mapping from detected emotion categories to musical keys, tempo ranges, and melodic contour patterns, grounding LLM-generated output in music theory principles.
-
-3. **Hybrid Reliability Architecture**: Combination of zero-shot LLM generation with deterministic heuristic fallbacks, achieving 100% system reliability across all tested inputs.
-
-4. **Prompt Engineering Methodology**: Structured few-shot prompts with explicit output schemas, constraint enforcement ("EXACTLY N notes for N syllables"), and contextual carryover across long-lyric chunks — providing a reusable template for other cross-modal LLM tasks.
-
-5. **Open-Source Baseline**: A production-ready Python package with CLI, programmatic API, multi-format output, and comprehensive logging — providing a reproducible baseline for the research community.
-
-### 5.3 Limitations
+### 5.2 Limitations
 
 1. **Harmonic Depth**: Generated melodies are monophonic. Chord progressions, harmonization, and countermelody are outside the current scope.
 2. **Cultural Scope**: The emotion-key mapping and melodic contour algorithms reflect Western tonal music theory. Non-Western scales, modes, and rhythmic systems are not supported.
@@ -382,7 +360,7 @@ This work makes the following contributions to the field of LLM-based music gene
 4. **Evaluation Scale**: The 20-sample benchmark enables proof-of-concept validation but is insufficient for statistically robust claims about generalization.
 5. **LLM API Dependency**: The primary generation path requires OpenAI API access, incurring per-request costs and introducing network latency.
 
-### 5.4 Ethical Considerations
+### 5.3 Ethical Considerations
 
 - **Copyright**: Generated melodies may inadvertently resemble copyrighted works. Users should exercise discretion before commercial use.
 - **Attribution**: AI-generated content should be clearly disclosed, particularly in creative or academic contexts.
@@ -451,8 +429,6 @@ The results suggest that zero-shot LLM prompting, when carefully engineered with
 [11] OpenAI (2024). GPT-4 Technical Report. *OpenAI Research*.
 
 [12] Cuthbert, M. S., & Ariza, C. (2010). music21: A Toolkit for Computer-Aided Musicology and Symbolic Music Data. *Proceedings of the International Society for Music Information Retrieval Conference (ISMIR)*.
-
-[13] Brown, T., et al. (2020). Language Models Are Few-Shot Learners. *Advances in Neural Information Processing Systems (NeurIPS)*, 33.
 
 ---
 
@@ -578,6 +554,3 @@ print(f"Generated MusicXML: {xml_path}")
 
 ---
 
-## Acknowledgments
-
-This work was supported by guidance from Dr. Mohammad Motiur Rahman. We acknowledge OpenAI for API access, the music21 development team for music notation infrastructure, and the Pydantic and FluidSynth communities for foundational tools used in this implementation.
