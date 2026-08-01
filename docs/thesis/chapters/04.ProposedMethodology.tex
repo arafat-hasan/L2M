@@ -1,0 +1,357 @@
+This chapter presents the architecture and methodology of the proposed L2M
+system. The system is organized as a six-stage sequential pipeline in which
+each stage produces a validated, typed output consumed by the next. Two of
+the stages invoke an LLM; each of these is paired with a deterministic
+fallback so that the pipeline always completes.
+
+\section{Pipeline Overview}
+\label{sec:mt-pipeline}
+
+\ref{fig:pipeline} shows the six-stage pipeline. Raw lyrics are
+parsed and normalized (Stage~1), analyzed for emotion and rhythm by the
+first LLM call (Stage~2), and turned into a syllable-aligned note sequence
+by the second LLM call (Stage~3). The result is converted into a typed
+internal representation (Stage~4), exported to MIDI and MusicXML (Stage~5),
+and optionally rendered to audio (Stage~6). At each LLM-dependent stage, a
+fallback path activates automatically on API failure, timeout, or malformed
+response.
+
+\begin{figure}[ht]
+\centering
+\resizebox{0.78\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance = 0.45cm and 1.0cm,
+  stage/.style={
+    rectangle, rounded corners=4pt,
+    draw=black!55, fill=gray!8, thick,
+    minimum width=5.6cm, minimum height=0.72cm,
+    align=center, font=\small
+  },
+  llmstage/.style={
+    stage, fill=blue!10, draw=blue!55!black
+  },
+  optstage/.style={
+    stage, draw=black!40, dashed, fill=gray!4
+  },
+  io/.style={
+    ellipse, draw=black!60, thick, fill=white,
+    minimum width=3.8cm, minimum height=0.58cm,
+    align=center, font=\small
+  },
+  llmbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=blue!55!black, fill=blue!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  fbbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=orange!65!black, fill=orange!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  arr/.style={-{Stealth[length=5pt,width=4pt]}, thick, black!65},
+  sidearr/.style={-{Stealth[length=3.5pt,width=3pt]}, thin, dashed},
+  dtlabel/.style={font=\scriptsize\ttfamily, text=black!55, inner sep=1pt},
+]
+
+\node[io]                    (in)  {Lyrics Text};
+\node[stage,   below=of in]  (s1)  {\textbf{Stage 1}\enspace Lyrics Parsing};
+\node[llmstage,below=of s1]  (s2)  {\textbf{Stage 2}\enspace Emotion \& Rhythm Analysis};
+\node[llmstage,below=of s2]  (s3)  {\textbf{Stage 3}\enspace Melody Structure Generation};
+\node[stage,   below=of s3]  (s4)  {\textbf{Stage 4}\enspace Internal Representation};
+\node[stage,   below=of s4]  (s5)  {\textbf{Stage 5}\enspace MIDI\,/\,MusicXML Export};
+\node[optstage,below=of s5]  (s6)  {\textbf{Stage 6}\enspace Audio Rendering\;{\small\itshape(optional)}};
+
+\draw[arr] (in) -- (s1);
+\draw[arr] (s1) -- node[dtlabel,right=2pt]{\texttt{NormalizedLyrics}} (s2);
+\draw[arr] (s2) -- node[dtlabel,right=2pt]{\texttt{EmotionAnalysis}}  (s3);
+\draw[arr] (s3) -- node[dtlabel,right=2pt]{\texttt{MelodyStructure}}  (s4);
+\draw[arr] (s4) -- node[dtlabel,right=2pt]{\texttt{Melody IR}}        (s5);
+\draw[arr] (s5) -- node[dtlabel,right=2pt]{\texttt{.mid\;/\;.musicxml}} (s6);
+
+\node[llmbadge, right=0.65cm of s2] (llm1) {LLM Call\,1};
+\draw[sidearr, blue!55!black] (llm1.west) -- (s2.east);
+
+\node[llmbadge, right=0.65cm of s3] (llm2) {LLM Call\,2};
+\draw[sidearr, blue!55!black] (llm2.west) -- (s3.east);
+
+\node[fbbadge, left=0.65cm of s2] (fb2) {Fallback};
+\draw[sidearr, orange!65!black] (fb2.east) -- (s2.west);
+
+\node[fbbadge, left=0.65cm of s3] (fb3) {Fallback};
+\draw[sidearr, orange!65!black] (fb3.east) -- (s3.west);
+
+\end{tikzpicture}
+}% end resizebox
+\caption[L2M six-stage pipeline]{L2M six-stage sequential pipeline. Blue
+stages invoke LLM API calls; each has a deterministic fallback (orange).
+Stage~6 (dashed) is optional and requires FluidSynth.}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Design Principles}
+\label{sec:mt-design}
+
+Five principles guided the system design; \ref{tab:design-principles}
+summarizes their realization.
+
+\begin{table}[ht]
+\centering
+\caption[Design principles and their realization]{Design principles and
+their realization in L2M.}
+\label{tab:design-principles}
+\begin{tabular}{p{3.2cm} p{8.9cm}}
+\toprule
+\textbf{Principle} & \textbf{Realization} \\
+\midrule
+Modularity & Each stage is an independent service with defined input/output
+types \\
+Type safety & Pydantic~v2 models validate every inter-stage data structure \\
+Robustness & Fallback heuristics at Stages 2 and 3 ensure a 100\% completion
+rate \\
+Observability & Structured logging with component-level context at every
+stage \\
+Extensibility & Service interfaces allow drop-in replacement (e.g., a
+different LLM provider or audio synthesizer) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every transition in the data flow,
+\begin{center}
+\ttfamily\small
+str $\rightarrow$ NormalizedLyrics $\rightarrow$ EmotionAnalysis
+$\rightarrow$ MelodyStructure $\rightarrow$ Melody IR $\rightarrow$
+music21 Stream $\rightarrow$ files,
+\end{center}
+is guarded by schema validation, catching malformed LLM outputs before they
+propagate downstream.
+
+\section{Stage 1: Lyrics Parsing}
+\label{sec:mt-stage1}
+
+The \texttt{LyricParser} service performs three preprocessing steps:
+
+\begin{itemize}
+    \item \textbf{Normalization}: collapse whitespace, strip excess
+    punctuation, and handle line breaks;
+    \item \textbf{Phrase segmentation}: split the text on newlines and
+    sentence boundaries into lyric phrases;
+    \item \textbf{Syllable estimation}: count vowel clusters per word, with
+    adjustments for silent-\emph{e} endings, to obtain an approximate
+    syllable count per phrase.
+\end{itemize}
+
+The heuristic syllable count serves two purposes: it provides a reference
+against which the LLM's own count is cross-checked, and it drives the
+fallback melody generator when the LLM path is unavailable.
+
+\section{Stage 2: Emotion and Rhythm Analysis via LLM}
+\label{sec:mt-stage2}
+
+The first LLM call extracts the musical attributes of the lyrics using a
+structured few-shot prompt. The response is a JSON object with four fields:
+the dominant \texttt{emotion} (one of \emph{happy, sad, hopeful, tense,
+calm, excited, melancholic}), a suggested \texttt{tempo} in BPM (validated
+range 40--200), a \texttt{time\_signature} (e.g., \texttt{4/4},
+\texttt{3/4}, \texttt{6/8}), and a per-line syllable breakdown in
+\texttt{phrases}. The prompt is assembled from six components:
+
+\begin{enumerate}
+    \item System role assignment (``expert music composer and emotional
+    analyst'');
+    \item JSON output schema specification;
+    \item Three diverse few-shot examples (happy, sad, hopeful);
+    \item Empirically derived tempo range guidelines per emotion category;
+    \item The target lyrics;
+    \item A format enforcement instruction.
+\end{enumerate}
+
+An example response for the input \enquote{The sun will rise again}:
+
+\begin{lstlisting}[style=jsonStyle]
+{
+  "emotion": "hopeful",
+  "tempo": 90,
+  "time_signature": "4/4",
+  "phrases": [{"line": "The sun will rise again", "syllables": 6}]
+}
+\end{lstlisting}
+
+\textbf{Fallback.} If the LLM call fails or returns invalid JSON, a
+keyword-matching heuristic detects the emotion from a curated lexicon
+(e.g., \emph{rain}, \emph{fade}, \emph{dark} $\rightarrow$ \emph{sad};
+\emph{dance}, \emph{shine}, \emph{joy} $\rightarrow$ \emph{happy}) and
+assigns the median tempo and the most common time signature for that emotion
+category.
+
+\section{Stage 3: Melody Structure Generation via LLM}
+\label{sec:mt-stage3}
+
+The second LLM call generates the syllable-aligned note sequence,
+conditioned on the Stage~2 analysis. The prompt receives the detected
+emotion, tempo, time signature, total syllable count $N$, and the lyrics,
+and imposes the following constraints:
+
+\begin{itemize}
+    \item \textbf{Emotion-to-key guidance}: positive emotions
+    $\rightarrow$ major keys; negative or tense emotions $\rightarrow$
+    minor keys (per \ref{tab:emotion-mapping});
+    \item \textbf{Hard alignment constraint}: \enquote{Generate EXACTLY $N$
+    notes --- one per syllable};
+    \item \textbf{Vocal range constraint}: all pitches within C3--C5;
+    \item \textbf{Duration set}: $\{0.25, 0.5, 1.0, 2.0, 4.0\}$ beats;
+    \item \textbf{Contour guidance}: avoid large melodic jumps; create
+    natural phrase arcs.
+\end{itemize}
+
+The response is a JSON object containing the selected \texttt{key} and a
+\texttt{melody} array of \texttt{\{note, duration, velocity\}} objects in
+scientific pitch notation.
+
+\subsection{Chunking for Long Lyrics}
+\label{sec:mt-chunking}
+
+When the total syllable count exceeds a configurable threshold (default:
+30), the system splits the lyrics into phrase-level chunks and issues
+sequential LLM calls. The last three notes of each chunk are carried into
+the next prompt as context, maintaining local melodic continuity across
+chunk boundaries.
+
+\subsection{Emotion-to-Musical-Attribute Mapping}
+\label{sec:mt-mapping}
+
+\ref{tab:emotion-mapping} defines the explicit mapping used both to
+guide the LLM (as prompt guidance) and to drive the fallback generator (as a
+lookup table). The associations follow the music-psychology findings
+reviewed in \Autoref{chap:background} \cite{hevner36expression,
+juslin01musicemotion, gabrielsson10emotion}.
+
+\begin{table}[ht]
+\centering
+\caption[Emotion-to-musical-attribute mapping]{Emotion-to-musical-attribute
+mapping used for prompt guidance and fallback generation.}
+\label{tab:emotion-mapping}
+\begin{tabular}{l l c l}
+\toprule
+\textbf{Emotion} & \textbf{Key} & \textbf{Tempo (BPM)} & \textbf{Melodic
+contour} \\
+\midrule
+Happy   & C major & 100--120 & Ascending \\
+Hopeful & G major & 80--100  & Wavy (arch) \\
+Sad     & A minor & 60--80   & Descending \\
+Tense   & D minor & 90--110  & Erratic (high variance) \\
+Calm    & F major & 60--80   & Balanced (small intervals) \\
+Excited & D major & 120--140 & Ascending (steep) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Deterministic Fallback Generation}
+\label{sec:mt-fallback}
+
+If the melody-generation call fails, a deterministic generator constructs
+the note sequence algorithmically from the emotion mapping.
+Algorithm~\ref{alg:fallback} outlines the procedure. Four contour algorithms
+are implemented:
+
+\begin{itemize}
+    \item \textbf{Ascending/Descending}: monotonic pitch progression with
+    occasional plateaus based on syllable stress;
+    \item \textbf{Wavy}: alternating up/down movement within a $\pm5$
+    semitone range;
+    \item \textbf{Balanced}: Gaussian-weighted note selection centered on
+    the tonic;
+    \item \textbf{Erratic}: uniform random jumps within scale degrees,
+    conveying tension.
+\end{itemize}
+
+\begin{algorithm}[ht]
+\caption{Deterministic fallback melody generation}
+\label{alg:fallback}
+\KwIn{Lyrics $L$ with $N$ estimated syllables; emotion $e$}
+\KwOut{Melody $M$ with exactly $N$ notes}
+$(key, [t_{min}, t_{max}], contour) \leftarrow \textsc{EmotionMap}(e)$\;
+$tempo \leftarrow \operatorname{median}(t_{min}, t_{max})$\;
+$scale \leftarrow \textsc{DiatonicScale}(key)$ restricted to C3--C5\;
+$M \leftarrow \langle\rangle$\;
+\For{$i \leftarrow 1$ \KwTo $N$}{
+    $p_i \leftarrow \textsc{NextPitch}(scale, contour, M)$\;
+    $d_i \leftarrow \textsc{DurationFor}(i, N)$
+    \tcp*{phrase-final notes lengthened}
+    append $(p_i, d_i)$ to $M$\;
+}
+\Return{$(key, tempo, M)$}
+\end{algorithm}
+
+Because the fallback is purely rule-based, it always terminates with a valid
+melody, guaranteeing a 100\% pipeline completion rate regardless of network
+or API conditions.
+
+\section{Stage 4: Internal Representation}
+\label{sec:mt-stage4}
+
+The \texttt{MelodyGenerator} service converts the validated
+\texttt{MelodyStructure} into a typed \texttt{Melody} dataclass --- the
+internal representation (IR) --- comprising a list of \texttt{NoteEvent}
+objects (scientific pitch, duration in quarter-note units, MIDI velocity)
+together with the tempo, time signature, and key. Note-level validation
+enforces pitch-range bounds and duration positivity before this stage
+completes.
+
+\section{Stage 5: MIDI and MusicXML Export}
+\label{sec:mt-stage5}
+
+The \texttt{MIDIWriter} service converts the \texttt{Melody} IR into a
+music21 \texttt{Stream} object \cite{cuthbert10music21}, attaching a
+metronome mark (tempo), key signature, time signature, and per-note
+metadata (velocity, duration). The stream is exported to both MIDI
+(\texttt{.mid}) and MusicXML (\texttt{.musicxml}) \cite{good01musicxml}
+through music21's native exporters.
+
+\section{Stage 6: Audio Rendering}
+\label{sec:mt-stage6}
+
+The optional \texttt{AudioRenderer} service invokes FluidSynth with a
+configurable SoundFont (\texttt{.sf2}) to synthesize the MIDI file into PCM
+audio (WAV, 44{,}100~Hz by default), with optional FFmpeg post-processing
+for MP3 encoding.
+
+\section{Implementation}
+\label{sec:mt-implementation}
+
+L2M is implemented as a Python package exposing both a command-line
+interface and a programmatic API. \ref{tab:tech-stack} lists the
+technology stack.
+
+\begin{table}[ht]
+\centering
+\caption[Technology stack]{Technology stack of the L2M implementation.}
+\label{tab:tech-stack}
+\begin{tabular}{l l}
+\toprule
+\textbf{Component} & \textbf{Technology} \\
+\midrule
+Language & Python 3.9+ \\
+LLM & OpenAI GPT-4o-mini (configurable) \\
+Music notation & music21 \\
+Data validation & Pydantic v2 \\
+Audio synthesis & FluidSynth + FFmpeg \\
+Interface & argparse CLI + Python API \\
+Testing & pytest with coverage \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A single melody is generated from the command line as:
+
+\begin{lstlisting}[style=jsonStyle, language=]
+l2m --lyrics "The sun will rise again"
+\end{lstlisting}
+
+\noindent
+The programmatic API mirrors the pipeline stages: a \texttt{LyricParser}
+normalizes the input, an \texttt{LLMClient} performs the emotion analysis,
+a \texttt{MelodyGenerator} produces the melody IR, and a \texttt{MIDIWriter}
+exports the notation files. All configuration (model name, temperature,
+maximum tokens, SoundFont path, sample rate) is supplied through environment
+variables with sensible defaults.

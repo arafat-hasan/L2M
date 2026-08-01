@@ -1,0 +1,136 @@
+This chapter reviews the research context in which L2M is situated. The
+review is organized in four parts: general deep-learning approaches to music
+generation, supervised lyrics-to-melody systems, text-conditioned audio
+generation, and the recent application of LLMs to musical tasks. The chapter
+closes with a gap analysis that motivates the design of L2M.
+
+\section{Deep Learning for Music Generation}
+\label{sec:lr-dl-music}
+
+Deep learning approaches to symbolic music generation have employed
+recurrent networks, GANs, VAEs, and Transformer architectures to model the
+hierarchical temporal structure of music; Briot et
+al.~\cite{briot20deeplearning} provide a comprehensive survey of these
+foundational methods. Sequence-to-sequence learning
+\cite{sutskever14seq2seq} first made it practical to map one symbolic
+sequence to another of different length, forming the algorithmic basis for
+lyric-conditioned melody generation. The Music Transformer
+\cite{huang18musictransformer} subsequently demonstrated that self-attention
+with relative position representations can capture long-range musical
+structure such as repetition and motif development, establishing the
+Transformer \cite{vaswani17attention} as the dominant architecture for
+symbolic music modeling.
+
+\section{Lyrics-to-Melody Generation}
+\label{sec:lr-l2m}
+
+\subsection{Early Sequence-to-Sequence Approaches}
+
+Bao et al.~\cite{bao19neural} introduced one of the earliest end-to-end
+neural frameworks for melody composition from lyrics, using syllable-level
+alignment on pop music corpora within a Seq2Seq architecture. The work
+demonstrated feasibility but required a large paired lyrics--melody corpus,
+and generated melodies frequently violated basic music-theoretic
+expectations. SongMASS \cite{sheng21songmass} improved data efficiency by
+pre-training separate lyric and melody encoders with masked sequence-to-sequence
+objectives and enforcing alignment constraints during decoding.
+
+\subsection{Music-Theory-Constrained and Template-Based Systems}
+
+ReLyMe \cite{zhang22relyme} addressed a core weakness of purely data-driven
+models --- weak semantic and musical coherence --- by explicitly
+incorporating lyric--melody relationship principles from music theory (tone,
+rhythm, and structure relationships) as decoding-time constraints.
+TeleMelody \cite{ju22telemelody} decomposed generation into a two-stage,
+template-based process (lyric-to-template and template-to-melody), improving
+controllability and reducing the dependence on paired data. ROC
+\cite{lv22roc} went further and reformulated generation as retrieval and
+re-composition over a database of existing melodic fragments. These systems
+collectively demonstrate the value of decomposition and of explicit musical
+knowledge --- two ideas that L2M adopts in a radically simplified, prompt-based
+form.
+
+\subsection{Controllable and Alignment-Focused Systems}
+
+Zhang et al.~\cite{zhang23controllable} introduced style modulation via
+reference embeddings and memory fusion, enabling user-directed genre and
+mood control and marking the shift from pure generation toward interactive
+music creation. Reddy et al.~\cite{reddy23attention} addressed incomplete or
+partial lyric inputs by applying cross-attention between text and melody
+sequences, improving robustness in real-world scenarios. More recent
+conditional-Transformer systems provide fine-grained melodic control:
+CSL-L2M \cite{chai24csll2m} conditions on song-level lyric and musical
+attributes, while SongGLM \cite{yu24songglm} introduces 2D alignment
+encoding with multi-task pre-training for harmonized lyric--melody
+relationships. On the representation side, Wang et
+al.~\cite{wang25melodylyrics} learn a shared melody--lyrics embedding space
+with a contrastive alignment loss, demonstrating the importance of strong
+cross-modal representations for both generation and retrieval.
+
+\subsection{LLM-Based Song Composition}
+
+SongComposer \cite{ding24songcomposer} is the closest recent work to this
+thesis: a music-specialized LLM that generates lyrics and melodies jointly
+using a tuple representation for word-level alignment. It achieves high
+quality but requires extensive domain-specific fine-tuning on large paired
+song datasets --- precisely the requirement L2M eliminates through zero-shot
+prompting of a general-purpose model. ChatMusician \cite{yuan24chatmusician}
+similarly extends an open LLM with intrinsic musical abilities via continued
+pre-training on ABC notation, again at substantial training cost.
+
+\section{Text-to-Audio Music Generation}
+\label{sec:lr-tta}
+
+A parallel research line generates \emph{audio} rather than symbolic
+notation. MusicLM \cite{agostinelli23musiclm} casts text-conditioned music
+generation as hierarchical sequence-to-sequence modeling over audio tokens,
+and MusicGen \cite{copet23musicgen} showed that a single-stage language
+model over compressed audio representations suffices for controllable,
+high-quality generation. These systems produce rich, fully arranged music,
+but they differ fundamentally from the task addressed here: they do not
+enforce syllabic alignment with lyrical text, and their audio output cannot
+be edited as notation by a musician. Recent comprehensive reviews of
+AI-enabled text-to-music generation \cite{li25review} classify systems along
+these symbolic-versus-audio axes and identify persistent challenges:
+long-term coherence, data scarcity, and limited controllability ---
+challenges that motivate symbolic, interpretable approaches such as L2M.
+
+Related transformer-based work has also targeted the inverse and adjacent
+tasks, such as lyric text generation with T5-style models
+\cite{mediakov24lyrics} and LSTM-based lyric modeling \cite{gill20lyric},
+which established sequential baselines for the language side of song
+composition.
+
+\section{Gap Analysis}
+\label{sec:lr-gap}
+
+\ref{tab:gap-analysis} summarizes the limitations shared by existing
+lyrics-to-melody systems.
+
+\begin{table}[ht]
+\centering
+\caption[Gap analysis of existing lyrics-to-melody systems]{Gap analysis of
+existing lyrics-to-melody systems and the corresponding L2M design response.}
+\label{tab:gap-analysis}
+\begin{tabular}{p{6.3cm} p{5.8cm}}
+\toprule
+\textbf{Limitation in prior work} & \textbf{L2M design response} \\
+\midrule
+Require large paired lyrics--melody training corpora & Zero-shot LLM
+prompting; no training data \\
+No graceful degradation when the model fails at inference & Deterministic,
+music-theory-grounded fallback at each LLM stage \\
+Single output format (typically MIDI only) & MIDI, MusicXML, WAV, and MP3
+export \\
+No explicit emotion-to-key grounding & Explicit emotion-to-musical-attribute
+mapping \\
+Not available as deployable open-source software & Documented Python package
+with CLI and API \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No prior system, to the best of our knowledge, combines zero-shot LLM
+generation with a deterministic reliability layer and multi-format notation
+export in a single deployable package. This combination defines the research
+space that the remainder of this thesis develops.

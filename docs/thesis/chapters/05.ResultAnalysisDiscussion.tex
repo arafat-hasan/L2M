@@ -1,0 +1,274 @@
+This chapter evaluates the proposed system. Because music generation quality
+is inherently subjective, the evaluation combines \emph{automatic metrics}
+(objective and reproducible) with \emph{qualitative analysis} (expert review
+of sample outputs). The chapter reports quantitative results on a 20-sample
+benchmark, analyzes fallback behavior and latency, compares L2M with related
+systems, and discusses the findings, limitations, and ethical
+considerations.
+
+\section{Evaluation Methodology}
+\label{sec:ev-methodology}
+
+\subsection{Automatic Metrics}
+
+Five automatic metrics are computed over all benchmark runs:
+
+\begin{table}[ht]
+\centering
+\caption[Automatic evaluation metrics]{Automatic evaluation metrics and
+their definitions.}
+\label{tab:metric-definitions}
+\begin{tabular}{p{4.4cm} p{7.7cm}}
+\toprule
+\textbf{Metric} & \textbf{Definition} \\
+\midrule
+Syllable--note alignment & Fraction of outputs where the number of generated
+notes equals the total syllable count \\
+Emotion--key consistency & Fraction of outputs using a key consistent with
+the detected emotion per \ref{tab:emotion-mapping} \\
+Tempo appropriateness & Fraction of outputs with tempo within the expected
+BPM range for the detected emotion \\
+MIDI validity & Fraction of MIDI files successfully re-parsed by music21
+without errors \\
+LLM success rate & Fraction of pipeline runs completed without activating a
+fallback \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Qualitative Assessment}
+
+Three dimensions are evaluated by expert listening: \textbf{melodic
+coherence} (smoothness of pitch progression, singability, phrase closure),
+\textbf{emotional alignment} (perceived match between lyrical sentiment and
+musical mood), and \textbf{rhythmic naturalness} (naturalness of note
+duration patterns relative to speech rhythm).
+
+\section{Test Dataset}
+\label{sec:ev-dataset}
+
+The benchmark comprises 20 lyrical inputs designed to span the emotion space
+and a range of lyric complexity (\ref{tab:dataset}). Ten inputs use
+literal, simple language and ten use poetic or metaphorical language.
+
+\begin{table}[ht]
+\centering
+\caption[Benchmark composition]{Composition of the 20-sample evaluation
+benchmark.}
+\label{tab:dataset}
+\begin{tabular}{l p{8.6cm}}
+\toprule
+\textbf{Dimension} & \textbf{Distribution} \\
+\midrule
+Emotion & Happy (5), Sad (5), Hopeful (4), Tense (3), Calm (2), Excited (1) \\
+Length & Short (1 line, 5 samples), Medium (2--3 lines, 10 samples), Long
+(4+ lines, 5 samples) \\
+Style & Literal/simple (10), Poetic/metaphorical (10) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Representative test cases include \enquote{The sun will rise again}
+(hopeful, 6 syllables), \enquote{Dancing in the moonlight, feeling so
+alive} (happy, 12 syllables), \enquote{Memories fade like photographs left
+in the rain} (sad, 13 syllables), \enquote{Shadows creeping closer,
+darkness all around} (tense, 11 syllables), and \enquote{Gentle waves upon
+the shore, peaceful and serene} (calm, 12 syllables).
+
+\section{Quantitative Results}
+\label{sec:ev-quantitative}
+
+\subsection{Automatic Metrics}
+
+\ref{tab:results} reports the automatic metric scores across the
+benchmark.
+
+\begin{table}[ht]
+\centering
+\caption[Automatic metric results]{Automatic metric results on the
+20-sample benchmark.}
+\label{tab:results}
+\begin{tabular}{l c p{5.6cm}}
+\toprule
+\textbf{Metric} & \textbf{Score} & \textbf{Details} \\
+\midrule
+Syllable--note alignment & \textbf{100\%} & All 20/20 outputs matched the
+syllable count exactly \\
+Emotion--key consistency & \textbf{95\%} & 19/20 used appropriate keys; one
+edge case with ambiguous mixed emotion \\
+Tempo appropriateness & \textbf{90\%} & 18/20 within expected BPM ranges;
+two borderline outliers \\
+MIDI validity & \textbf{100\%} & All 20/20 MIDI files parsed successfully by
+music21 \\
+LLM success rate & \textbf{85\%} & 17/20 runs used LLM output; 3/20
+activated a fallback \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The perfect alignment score is a direct consequence of the hard
+\enquote{EXACTLY $N$ notes} prompt constraint combined with schema
+validation and, where necessary, fallback regeneration; alignment is the
+single most important requirement for singability and was the primary
+failure mode of unconstrained prompting (\Autoref{sec:ev-discussion}).
+
+\subsection{Fallback Performance}
+
+Of the three runs that activated a fallback, two were caused by network
+timeouts on LLM API calls and one by a malformed JSON response (a note-count
+mismatch). All three fallback-generated melodies passed the MIDI validity
+check. Qualitative review rated the fallback outputs as \enquote{mechanically
+correct but less expressive} than LLM outputs --- an expected trade-off of
+deterministic generation, and an acceptable one given that the alternative
+is outright failure.
+
+\subsection{Latency Profile}
+
+\ref{tab:latency} breaks down the mean end-to-end latency of
+approximately 3.2 seconds. The two LLM calls dominate the runtime; notation
+export and audio synthesis are comparatively negligible.
+
+\begin{table}[ht]
+\centering
+\caption[Latency profile]{Mean per-operation latency across benchmark runs.}
+\label{tab:latency}
+\begin{tabular}{l c}
+\toprule
+\textbf{Operation} & \textbf{Mean time} \\
+\midrule
+Emotion analysis (LLM) & $\sim$1.4 s \\
+Melody generation (LLM) & $\sim$1.1 s \\
+MIDI/MusicXML export & $\sim$0.3 s \\
+Audio rendering (WAV) & $\sim$0.4 s \\
+\midrule
+\textbf{End-to-end (with audio)} & \textbf{$\sim$3.2 s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Qualitative Analysis of Sample Outputs}
+\label{sec:ev-qualitative}
+
+\subsection{Hopeful Sample}
+
+For the input \enquote{The sun will rise again} (hopeful, 6 syllables), the
+system detected the emotion \emph{hopeful} and selected G~major at 90~BPM in
+4/4. The generated melody,
+\begin{center}
+G4\,(0.5) $\rightarrow$ A4\,(0.5) $\rightarrow$ B4\,(1.0) $\rightarrow$
+C5\,(1.0) $\rightarrow$ B4\,(0.5) $\rightarrow$ A4\,(1.5),
+\end{center}
+forms an ascending arch that rises to the phrase peak (C5) and resolves
+back down. All notes are diatonic to G~major and the entire melody spans a
+singable fifth; the ascending contour is emotionally appropriate for the
+hopeful register.
+
+\subsection{Sad Sample}
+
+For the input \enquote{Memories fade like photographs left in the rain}
+(sad, 13 syllables), the system detected \emph{sad} and selected A~minor at
+65~BPM in 4/4. The melody descends stepwise (A4 $\rightarrow$ G4
+$\rightarrow$ F4 $\rightarrow$ E4 $\rightarrow$ D4 $\ldots$), resolving on
+D4. The stepwise descent and slow tempo capture the melancholic mood
+effectively, and the melody avoids any large major-interval leaps that would
+be inconsistent with the emotional register.
+
+\section{Comparison with Related Systems}
+\label{sec:ev-comparison}
+
+\ref{tab:comparison} positions L2M against representative supervised
+lyrics-to-melody systems.
+
+\begin{table}[ht]
+\centering
+\caption[Comparison with related systems]{Comparison of L2M with
+representative lyrics-to-melody systems.}
+\label{tab:comparison}
+\begin{tabular}{l c c c c}
+\toprule
+\textbf{System} & \textbf{Training} & \textbf{Output formats} &
+\textbf{Fallback} & \textbf{Open source} \\
+\midrule
+Bao et al.~\cite{bao19neural} & Yes (large corpus) & MIDI & No & No \\
+ReLyMe~\cite{zhang22relyme} & Yes & MIDI & Partial & No \\
+SongComposer~\cite{ding24songcomposer} & Yes (paired data) & MIDI + lyrics &
+No & No \\
+\textbf{L2M (ours)} & \textbf{No} & \textbf{MIDI, MusicXML, WAV, MP3} &
+\textbf{Yes} & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+L2M's advantages over supervised systems are the absence of any training
+data or GPU requirement, a 100\% completion rate through the hybrid
+architecture, multiple output formats including playable audio, and
+sub-5-second end-to-end latency. Its limitations relative to fine-tuned
+systems are less sophisticated melodic structures (single voice, no
+harmony), limited style diversity, and musical creativity bounded by the
+LLM's zero-shot capability.
+
+\section{Discussion}
+\label{sec:ev-discussion}
+
+Four findings emerge from the evaluation, answering the research questions
+posed in \Autoref{chap:intro}.
+
+\textbf{Finding 1 --- LLM viability for cross-modal generation (RQ1).}
+GPT-4o-mini demonstrates sufficient musical knowledge to generate
+syllabically aligned, emotionally consistent melodies in a zero-shot
+setting. This suggests that LLM pre-training encodes substantial implicit
+music theory knowledge that structured prompting can elicit.
+
+\textbf{Finding 2 --- Prompt engineering as a core technical contribution
+(RQ4).} The syllable-count hard constraint proved critical: without explicit
+enforcement, early prompt versions produced note counts deviating by
+$\pm30\%$ from the syllable count. Structured JSON schemas and few-shot
+examples reduced malformed response rates from roughly 35\% (unstructured
+prompts) to roughly 15\%.
+
+\textbf{Finding 3 --- Hybrid architecture value (RQ3).} The fallback
+activation rate of 15\% (3/20 runs) demonstrates that LLM-only pipelines are
+insufficient for production systems requiring reliability. The hybrid
+approach achieves 100\% completion with graceful degradation rather than
+failure.
+
+\textbf{Finding 4 --- Two-stage decomposition (RQ2).} Separating emotion
+analysis from melody generation yields two benefits: \emph{interpretability}
+--- users can inspect and override the emotion reading before melody
+generation --- and \emph{targeted fallback} --- if only melody generation
+fails, the correct emotional context is preserved for the fallback
+generator.
+
+\section{Limitations}
+\label{sec:ev-limitations}
+
+Five limitations bound the present work:
+
+\begin{enumerate}
+    \item \textbf{Harmonic depth.} Generated melodies are monophonic; chord
+    progressions, harmonization, and countermelody are outside the current
+    scope.
+    \item \textbf{Cultural scope.} The emotion--key mapping and contour
+    algorithms reflect Western tonal music theory; non-Western scales,
+    modes, and rhythmic systems are not supported.
+    \item \textbf{Long-form coherence.} The chunking strategy maintains
+    local melodic continuity via three-note context carryover but does not
+    enforce global structural coherence (e.g., return to the tonic at
+    phrase boundaries).
+    \item \textbf{Evaluation scale.} The 20-sample benchmark enables
+    proof-of-concept validation but is insufficient for statistically robust
+    claims about generalization.
+    \item \textbf{LLM API dependency.} The primary generation path requires
+    OpenAI API access, incurring per-request cost and network latency.
+\end{enumerate}
+
+\section{Ethical Considerations}
+\label{sec:ev-ethics}
+
+Three ethical aspects deserve note. \textbf{Copyright}: generated melodies
+may inadvertently resemble copyrighted works, and users should exercise
+discretion before commercial use. \textbf{Attribution}: AI-generated content
+should be clearly disclosed, particularly in creative or academic contexts.
+\textbf{Access equity}: API costs may create barriers for users in
+resource-constrained settings; support for locally hosted open-source LLMs
+would mitigate this and is identified as future work.

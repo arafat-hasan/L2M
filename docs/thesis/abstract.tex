@@ -1,0 +1,13 @@
+\begin{abstract}
+\thispagestyle{plain}
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+Generating a singable melody from lyrical text is a demanding cross-modal task: the system must understand the semantic and emotional content of the lyrics, align every syllable with exactly one musical note, and produce an output that is musically coherent and emotionally consistent with the text. Existing approaches rely on supervised deep learning models trained on large paired lyrics--melody corpora, which are difficult and expensive to curate, and they typically fail without recourse when the model produces invalid output at inference time. This thesis presents \textbf{L2M}, a lyrics-to-melody generation system that employs a Large Language Model (LLM) as its core reasoning engine in a zero-shot setting, requiring no task-specific training. L2M decomposes the task into a two-stage prompting pipeline: the first LLM call classifies the emotional content, tempo, and phrase structure of the input lyrics, and a second call generates a syllable-aligned note sequence conditioned on the extracted musical attributes. An explicit emotion-to-key mapping grounds the generation in Western music theory, while a deterministic fallback mechanism based on melodic contour heuristics guarantees output regardless of API availability. The system exports standard music notation (MIDI, MusicXML) and optional synthesized audio (WAV/MP3). Evaluation on a 20-sample benchmark spanning six emotion categories shows 100\% syllable--note alignment accuracy, 95\% emotion--key consistency, 100\% MIDI validity, and an average end-to-end latency of 3.2 seconds. L2M is released as an open-source Python package with a command-line interface and programmatic API, providing an accessible and reproducible baseline for LLM-based music generation research.
+
+    \footnotesize
+    \vspace{1cm}
+    \noindent
+    \textbf{Keywords:} Lyrics-to-Melody Generation, Large Language Models, Prompt Engineering, Emotion-Aware Music Generation, Music Information Retrieval, Cross-Modal Generation.
+
+\end{abstract}

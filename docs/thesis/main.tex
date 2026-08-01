@@ -1,0 +1,66 @@
+\documentclass[12pt,a4paper]{report}
+
+\include{preamble}
+
+\begin{document}
+
+\input{titlepage.tex}
+\input{evaluation.tex}
+\input{approval.tex}
+\input{authorship.tex}
+\input{dedication.tex}
+
+\newpage
+\addcontentsline{toc}{chapter}{Abstract}
+\input{abstract.tex}
+
+\newpage
+\addcontentsline{toc}{chapter}{Acknowledgment}
+\input{acknowledgment.tex}
+
+\tableofcontents
+\label{toc}
+\listoffigures
+\listoftables
+
+\headerregularsection
+
+\newpage
+\input{chapters/name1.tex}
+\chapter{Introduction}
+\label{chap:intro}
+\input{chapters/01.Introduction.tex}
+
+\newpage
+\input{chapters/name2.tex}
+\chapter{Literature Review}
+\label{chap:literature-review}
+\input{chapters/02.LiteratureReview.tex}
+
+\newpage
+\input{chapters/name3.tex}
+\chapter{Background: Large Language Models and Symbolic Music}
+\label{chap:background}
+\input{chapters/03.Background.tex}
+
+\newpage
+\input{chapters/name4.tex}
+\chapter{Proposed Methodology}
+\label{chap:methodology}
+\input{chapters/04.ProposedMethodology.tex}
+
+\newpage
+\input{chapters/name5.tex}
+\chapter{Results \& Analysis}
+\label{chap:results-analysis}
+\input{chapters/05.ResultAnalysisDiscussion.tex}
+
+\newpage
+\input{chapters/name6.tex}
+\chapter{Conclusion and Future Work}
+\label{chap:conclusion-future-work}
+\input{chapters/06.ConclusionFutureWork.tex}
+
+\printbibliography[heading=bibintoc, title={Bibliography}]
+
+\end{document}

@@ -1,0 +1,170 @@
+Music has accompanied human language for as long as recorded history, and the
+song --- lyrics set to melody --- remains one of the most universal forms of
+creative expression. Composing a melody for a given lyric, however, is a task
+that has traditionally demanded years of musical training. It requires the
+composer to understand what the words \emph{mean}, to feel what they
+\emph{evoke}, and to translate both into a sequence of pitches and durations
+that a human voice can sing naturally. This thesis investigates whether a
+Large Language Model (LLM), used purely through prompting and without any
+task-specific training, can perform this act of cross-modal composition, and
+presents \textbf{L2M}, a complete, open-source lyrics-to-melody generation
+system built on this premise.
+
+\section{Motivation}
+\label{sec:motivation}
+
+Automatic music composition has advanced rapidly with deep learning, and
+systems now exist that generate convincing instrumental music
+\cite{briot20deeplearning, huang18musictransformer} and even high-fidelity
+audio directly from text descriptions \cite{agostinelli23musiclm,
+copet23musicgen}. Yet the specific task of \emph{lyrics-to-melody generation}
+--- producing a singable melodic line for a given lyrical text --- remains
+comparatively difficult, because it couples natural language understanding
+with symbolic music generation under hard structural constraints.
+
+Existing lyrics-to-melody systems \cite{bao19neural, sheng21songmass,
+ju22telemelody, zhang22relyme, ding24songcomposer} are almost exclusively
+supervised: they learn the mapping from lyrics to melody from large corpora
+of paired examples. Such corpora are scarce, expensive to curate, and often
+encumbered by copyright, which restricts both research reproducibility and
+practical deployment. Moreover, purely neural systems typically offer no
+recourse when the model produces an invalid output at inference time ---
+a wrong number of notes, an out-of-range pitch, or a malformed sequence
+simply becomes a failed run.
+
+The emergence of instruction-following LLMs trained on internet-scale corpora
+--- which include music theory texts, song analyses, and transcribed lyrics
+--- suggests an alternative path. If an LLM already encodes substantial
+implicit knowledge about the relationship between words, emotions, and music,
+then careful \emph{prompt engineering} may elicit that knowledge zero-shot
+\cite{brown20fewshot}, eliminating the need for paired training data
+altogether. Whether this is actually achievable, and how reliably, is the
+central question motivating this work.
+
+\section{Problem Statement}
+\label{sec:problem-statement}
+
+The lyrics-to-melody task imposes four tightly coupled requirements on any
+generation system:
+
+\begin{enumerate}
+    \item \textbf{Semantic understanding.} The system must interpret not
+    merely the denotative meaning of the words but the affective intent and
+    thematic atmosphere embedded in the text.
+    \item \textbf{Syllabic alignment.} Every phonetic syllable must
+    correspond to exactly one musical note, preserving the natural cadence
+    of the sung phrase and ensuring singability.
+    \item \textbf{Musical coherence.} The output must exhibit a well-chosen
+    key, consistent tempo, appropriate mode, and a melodic contour that forms
+    a satisfying phrase arc within the conventions of tonal music.
+    \item \textbf{Emotional consistency.} The affective character of the
+    melody must reinforce, rather than contradict, the sentiment expressed
+    in the lyrics.
+\end{enumerate}
+
+Formally, given an arbitrary lyrical text $L$ containing $N$ syllables, the
+system must produce a melody $M = \langle (p_1, d_1), \ldots, (p_N, d_N)
+\rangle$ --- a sequence of exactly $N$ (pitch, duration) pairs --- together
+with a key, tempo, and time signature, such that $M$ is singable, tonally
+coherent, and emotionally consistent with $L$. The system must produce a
+valid $M$ for \emph{every} input, including when the underlying LLM service
+is unavailable or returns malformed output.
+
+\section{Research Questions}
+\label{sec:research-questions}
+
+This thesis addresses the following research questions:
+
+\begin{itemize}
+    \item[\textbf{RQ1.}] Can a general-purpose LLM, accessed zero-shot through
+    structured prompts, generate melodies that satisfy exact syllable--note
+    alignment and basic tonal coherence, without any task-specific training?
+    \item[\textbf{RQ2.}] Does decomposing the task into two stages ---
+    emotion/rhythm analysis followed by conditioned melody generation ---
+    improve controllability and interpretability over a single monolithic
+    generation step?
+    \item[\textbf{RQ3.}] Can a deterministic, music-theory-grounded fallback
+    mechanism guarantee full operational reliability while preserving
+    acceptable musical quality when the LLM path fails?
+    \item[\textbf{RQ4.}] Which prompt engineering techniques (output schemas,
+    hard constraints, few-shot examples, contextual carryover) are necessary
+    to make LLM output usable in a strictly validated music pipeline?
+\end{itemize}
+
+\section{Objectives}
+\label{sec:objectives}
+
+The concrete objectives of this work are to:
+
+\begin{enumerate}
+    \item Design an end-to-end pipeline that accepts arbitrary lyrical text
+    and produces standard music notation (MIDI, MusicXML) and optional
+    synthesized audio (WAV/MP3);
+    \item Develop a two-stage LLM prompting strategy for emotion analysis
+    and syllable-aligned melody generation, with structured JSON output
+    schemas validated at every stage;
+    \item Ground the generation process in music theory through an explicit
+    mapping from emotion categories to musical keys, tempo ranges, and
+    melodic contour patterns;
+    \item Implement deterministic fallback heuristics that guarantee a valid
+    output whenever an LLM call fails, times out, or returns malformed data;
+    \item Evaluate the system quantitatively and qualitatively on a benchmark
+    spanning six emotion categories, and release it as a documented,
+    open-source Python package.
+\end{enumerate}
+
+\section{Contributions}
+\label{sec:contributions}
+
+The principal contributions of this thesis are:
+
+\begin{enumerate}
+    \item \textbf{Two-stage LLM pipeline.} A novel decomposition of the
+    lyrics-to-melody task into (a) emotion and rhythm analysis and (b)
+    conditioned melody generation, each handled by a separate LLM call with
+    a structured JSON output schema --- enabling interpretability and
+    targeted fallback at each stage.
+    \item \textbf{Emotion-aware alignment.} An explicit mapping from detected
+    emotion categories to musical keys, tempo ranges, and melodic contour
+    patterns, grounding LLM-generated output in established music-psychology
+    findings \cite{hevner36expression, juslin01musicemotion}.
+    \item \textbf{Hybrid reliability architecture.} A combination of
+    zero-shot LLM generation with deterministic heuristic fallbacks that
+    achieves a 100\% completion rate across all tested inputs.
+    \item \textbf{Prompt engineering methodology.} Structured few-shot
+    prompts with explicit output schemas, hard constraint enforcement
+    (``EXACTLY $N$ notes for $N$ syllables''), and contextual carryover
+    across long-lyric chunks --- a reusable template for other cross-modal
+    LLM tasks.
+    \item \textbf{Open-source baseline.} A production-ready Python package
+    offering a CLI, a programmatic API, multi-format output,
+    and comprehensive logging, providing a reproducible baseline for the
+    research community.
+\end{enumerate}
+
+\section{Scope and Limitations}
+\label{sec:scope}
+
+The system generates \emph{monophonic} vocal melodies within the conventions
+of Western tonal music; harmony, accompaniment, and non-Western musical
+systems are outside the present scope and are discussed as future work.
+Evaluation is conducted on a 20-sample proof-of-concept benchmark with
+automatic metrics and expert qualitative review; a large-scale listener
+study is likewise deferred to future work.
+
+\section{Thesis Organization}
+\label{sec:organization}
+
+The remainder of this thesis is organized as follows.
+\Autoref{chap:literature-review} surveys prior work on lyrics-to-melody
+generation, text-to-music synthesis, and LLM-based generation.
+\Autoref{chap:background} introduces the background concepts this work
+builds upon: transformer-based LLMs, prompt engineering, the psychology of
+musical emotion, and symbolic music representations.
+\Autoref{chap:methodology} presents the proposed six-stage L2M architecture
+in detail, including both LLM prompt designs and the deterministic fallback
+algorithms. \Autoref{chap:results-analysis} reports the experimental setup,
+quantitative results, qualitative analyses, and a comparison with related
+systems, followed by a discussion of findings and limitations.
+\Autoref{chap:conclusion-future-work} concludes and outlines directions for
+future research.

@@ -1,0 +1,89 @@
+\section{Conclusion}
+\label{sec:cn-conclusion}
+
+This thesis presented \textbf{L2M}, an LLM-driven lyrics-to-melody
+generation system that achieves syllabic alignment, emotional coherence, and
+operational reliability without any task-specific training. The core
+technical insight is a two-stage prompting strategy --- emotion analysis
+followed by conditioned melody generation --- grounded in an explicit
+emotion-to-musical-attribute mapping, with a deterministic fallback layer
+that guarantees pipeline completion for every input.
+
+Quantitative evaluation on a 20-sample benchmark spanning six emotion
+categories demonstrated 100\% syllable--note alignment, 95\% emotion--key
+consistency, 100\% MIDI validity, and an average end-to-end latency of 3.2
+seconds. Qualitative review confirmed that generated melodies are diatonic,
+singable, and emotionally appropriate to their lyrics. The system is
+released as an open-source Python package with a command-line interface and
+programmatic API, providing an accessible, reproducible baseline for
+LLM-based music generation research.
+
+Returning to the research questions of \Autoref{chap:intro}: a
+general-purpose LLM \emph{can} generate structurally valid, emotionally
+consistent melodies zero-shot when its output is constrained by structured
+prompts and typed validation (RQ1); two-stage decomposition improves both
+interpretability and fallback precision (RQ2); a deterministic
+music-theory-grounded fallback converts a 15\% LLM failure rate into a 100\%
+system completion rate at an acceptable quality cost (RQ3); and hard
+constraints, output schemas, and few-shot examples are the prompt
+engineering techniques that make the difference between unusable and
+reliable output (RQ4). More broadly, the results suggest that zero-shot LLM
+prompting, carefully engineered with structured constraints, is a viable and
+practical alternative to supervised training for constrained creative
+generation tasks --- particularly where training data is scarce and
+reliability is a requirement.
+
+\section{Future Work}
+\label{sec:cn-future}
+
+Five directions extend this work naturally.
+
+\subsection{Harmonic Generation}
+
+The current system produces monophonic melodies. Future versions could
+generate chord progressions conditioned on the melodic output, support
+multi-voice arrangements (harmony, bass line, countermelody), and perform
+automatic instrumentation and orchestration.
+
+\subsection{Improved LLM Integration}
+
+Larger proprietary models and open-source alternatives should be evaluated
+for quality--cost--reliability trade-offs, including locally hosted models
+that would remove the API dependency identified in
+\Autoref{sec:ev-limitations}. A compact LLM fine-tuned on paired
+lyrics--melody data --- retaining the structural prompt framework ---
+could improve creative quality, and reinforcement learning from human
+feedback using musicologist-rated outputs offers a principled path to
+optimizing musicality directly.
+
+\subsection{Formal Evaluation}
+
+A large-scale user study (musicians and general listeners, $N \geq 100$)
+using Mean Opinion Scores and A/B comparison against systems such as ReLyMe
+\cite{zhang22relyme} and SongComposer \cite{ding24songcomposer} would
+substantiate the qualitative findings. Complementary musicological metrics
+--- pitch-class distribution entropy, interval histogram similarity to
+professional compositions, and phrase boundary detection accuracy --- would
+enable objective comparison at scale.
+
+\subsection{Non-Western Music Support}
+
+The emotion--key mapping could be extended to non-Western systems, including
+maqam (Arabic), raga (Indian), and pentatonic (East Asian) frameworks,
+together with multi-language syllabification for non-English lyrics ---
+addressing the cultural scope limitation directly.
+
+\subsection{Interactive Generation}
+
+A web-based interface with real-time playback and in-browser melody editing
+would open the system to non-programmer musicians. An iterative refinement
+loop --- in which the user adjusts the detected emotion label or selected
+key and the system regenerates --- would exploit the interpretability
+advantage of the two-stage design.
+
+\vspace{1em}
+\noindent
+In closing, this work demonstrates that the reasoning capabilities of
+modern language models, when disciplined by structured prompting, typed
+validation, and music-theoretic grounding, are sufficient to build a
+practical, reliable bridge from words to music.

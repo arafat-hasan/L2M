@@ -1,0 +1,138 @@
+This chapter introduces the concepts on which the proposed system is built:
+transformer-based Large Language Models and the prompting techniques used to
+control them, the psychology of musical emotion that grounds the
+emotion-to-key mapping, and the symbolic music representations used to encode
+and export generated melodies.
+
+\section{Large Language Models}
+\label{sec:bg-llm}
+
+Large Language Models are neural networks based on the Transformer
+architecture \cite{vaswani17attention}, trained on internet-scale text
+corpora with a self-supervised next-token prediction objective. The
+Transformer replaces recurrence with \emph{self-attention}, in which every
+token attends to every other token in the context window:
+\begin{equation}
+    \operatorname{Attention}(Q, K, V) =
+    \operatorname{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V,
+\label{eq:attention}
+\end{equation}
+where $Q$, $K$, and $V$ are query, key, and value projections of the input
+and $d_k$ is the key dimension. Stacked multi-head attention layers allow
+the model to capture long-range dependencies --- in language and, as this
+thesis exploits, in musical structure as well.
+
+Brown et al.~\cite{brown20fewshot} demonstrated that sufficiently large
+models exhibit \emph{in-context learning}: they can perform new tasks
+specified entirely in the prompt, optionally guided by a small number of
+examples (\emph{few-shot} prompting), without any parameter updates. This
+\emph{zero-shot} or few-shot capability is the foundation of L2M. Modern
+instruction-tuned models such as GPT-4 \cite{openai24gpt4} follow natural
+language instructions and can emit structured output formats such as JSON on
+request. Because their pre-training corpora include music theory texts, song
+analyses, chord charts, and transcribed lyrics, such models implicitly
+encode a substantial amount of musical knowledge --- knowledge that
+music-specialized LLMs like ChatMusician \cite{yuan24chatmusician} make
+explicit through further training, but which this work instead elicits
+purely through prompting.
+
+\section{Prompt Engineering}
+\label{sec:bg-prompting}
+
+Prompt engineering is the practice of designing model inputs that reliably
+elicit a desired behavior. The techniques used in this work are:
+
+\begin{itemize}
+    \item \textbf{Role assignment.} A system message assigns the model a
+    persona (e.g., ``expert music composer and emotional analyst''),
+    conditioning it toward domain-appropriate output.
+    \item \textbf{Output schema specification.} The prompt specifies an
+    exact JSON structure for the response, allowing downstream code to parse
+    and validate the output mechanically.
+    \item \textbf{Few-shot examples.} A small number of worked input--output
+    examples \cite{brown20fewshot} demonstrate the expected format and
+    reasoning style; L2M uses three diverse examples per analysis prompt.
+    \item \textbf{Hard constraints.} Explicit, non-negotiable requirements
+    (e.g., ``generate EXACTLY $N$ notes'') that the output must satisfy.
+    Decomposing a task into intermediate reasoning steps is likewise known
+    to improve reliability on structured problems \cite{wei22cot}; L2M
+    applies this principle architecturally by splitting analysis from
+    generation.
+    \item \textbf{Contextual carryover.} When input must be processed in
+    chunks, appending a summary of previous output (here, the last three
+    generated notes) to each subsequent prompt preserves continuity.
+\end{itemize}
+
+Even with these techniques, LLM output is stochastic and occasionally
+malformed; every response in L2M is therefore validated against typed
+schemas before use, and a deterministic fallback stands behind every LLM
+call.
+
+\section{Music, Emotion, and Tonality}
+\label{sec:bg-emotion}
+
+The link between musical structure and perceived emotion has been studied
+empirically for nearly a century. Hevner's classic adjective-circle
+experiments \cite{hevner36expression} established that listeners reliably
+associate musical modes with affective qualities --- major modes with
+happiness and serenity, minor modes with sadness and tension. Russell's
+circumplex model of affect \cite{russell80circumplex} organizes emotion
+along two dimensions, \emph{valence} (pleasant--unpleasant) and
+\emph{arousal} (activated--deactivated), which map naturally onto musical
+parameters: mode and consonance track valence, while tempo and dynamics
+track arousal. Subsequent research consolidated these findings into robust
+structure--emotion associations \cite{juslin01musicemotion,
+gabrielsson10emotion}: fast tempi and ascending contours convey excitement
+or joy; slow tempi, minor keys, and descending contours convey sadness;
+moderate tempi with small intervals convey calm.
+
+L2M operationalizes this literature directly: each of its six emotion
+categories (\emph{happy, sad, hopeful, tense, calm, excited}) is mapped to a
+key, a tempo range, and a melodic contour pattern
+(\Autoref{chap:methodology}, \ref{tab:emotion-mapping}). Basic
+tonal-music conventions constrain the output further: melodies remain
+diatonic to the selected key, within a singable vocal range, and quantized
+to standard note durations.
+
+\section{Symbolic Music Representation}
+\label{sec:bg-symbolic}
+
+\subsection{Pitch, Duration, and Scientific Pitch Notation}
+
+A monophonic melody is a sequence of notes, each defined by a pitch and a
+duration. Pitches are written in \emph{scientific pitch notation} (SPN),
+which combines a note letter, optional accidental, and octave number ---
+e.g., C4 is middle C and A4 is the 440\,Hz tuning standard. Durations are
+expressed in quarter-note (beat) units; L2M restricts them to the set
+$\{0.25, 0.5, 1.0, 2.0, 4.0\}$, i.e., sixteenth note through whole note.
+Loudness is encoded as MIDI \emph{velocity} (0--127).
+
+\subsection{MIDI and MusicXML}
+
+Two standard interchange formats are used for output. \textbf{MIDI}
+(Musical Instrument Digital Interface) encodes music as timed note-on/note-off
+events with pitch and velocity; it is universally supported by sequencers
+and synthesizers. \textbf{MusicXML} \cite{good01musicxml} is an XML-based
+notation interchange format that preserves score-level semantics --- key
+signatures, time signatures, and note spellings --- making the output
+directly editable in engraving software such as MuseScore or Finale.
+Exporting both formats serves complementary use cases: playback and
+production (MIDI) versus reading and editing by musicians (MusicXML).
+
+\subsection{The music21 Toolkit}
+
+music21 \cite{cuthbert10music21} is a Python toolkit for computer-aided
+musicology that provides object models for notes, streams, key and time
+signatures, and metronome marks, together with validated exporters for MIDI
+and MusicXML. L2M builds its output stage on music21, which additionally
+serves as an independent validity check: any generated file that music21
+can re-parse without error is structurally well-formed.
+
+\subsection{Audio Synthesis}
+
+Symbolic output is optionally rendered to audio using
+\emph{FluidSynth}, a SoundFont-based software synthesizer. A SoundFont
+(\texttt{.sf2}) bundles sampled instrument timbres; FluidSynth renders a
+MIDI file through these samples into PCM audio (WAV), which FFmpeg can
+further encode to MP3. This completes the path from raw text to listenable
+audio.
