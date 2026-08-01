@@ -1,0 +1,791 @@
+% IEEE Conference Paper Format
+% Template: IEEEtran.cls (conference mode)
+% Compile: pdflatex paper.tex
+
+\documentclass[conference]{IEEEtran}
+
+% ---------------------------------------------------------------
+% Packages
+% ---------------------------------------------------------------
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,shapes.geometric,positioning,fit,backgrounds}
+
+% ---------------------------------------------------------------
+% Listings style for JSON / code snippets
+% ---------------------------------------------------------------
+\lstdefinestyle{jsonStyle}{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!50},
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\color{blue},
+  stringstyle=\color{teal},
+  commentstyle=\color{gray},
+  showstringspaces=false,
+  columns=fullflexible,
+}
+
+% ---------------------------------------------------------------
+% Document begins
+% ---------------------------------------------------------------
+\begin{document}
+
+\title{L2M: An LLM-Driven Lyrics-to-Melody Generation System\\
+       with Emotion-Aware Alignment}
+
+\author{
+  \IEEEauthorblockN{Arafat Hasan}
+  \IEEEauthorblockA{
+    \textit{Department of Computer Science and Engineering}\\
+    \textit{Mawlana Bhashani Science and Technology University}\\
+    Tangail, Bangladesh\\
+    opendoor.arafat@gmail.com
+  }
+  \and
+  \IEEEauthorblockN{Mohammad Motiur Rahman}
+  \IEEEauthorblockA{
+    \textit{Department of Computer Science and Engineering}\\
+    \textit{Mawlana Bhashani Science and Technology University}\\
+    Tangail, Bangladesh\\
+    motiurcse@mbstu.ac.bd
+  }
+}
+
+\maketitle
+
+% ---------------------------------------------------------------
+% Abstract
+% ---------------------------------------------------------------
+\begin{abstract}
+We present \textbf{L2M}, a lyrics-to-melody generation system that leverages
+Large Language Models (LLMs) as the core reasoning engine for cross-modal
+music composition. Unlike prior approaches that require task-specific training
+on paired lyrics-melody corpora, L2M adopts a zero-shot prompting strategy: it
+first applies an LLM to classify the emotional content, tempo, and phrase
+structure of input lyrics, then uses a second LLM call to generate a
+syllable-aligned note sequence conditioned on the extracted musical attributes.
+A deterministic fallback mechanism based on emotion-to-key mappings and melodic
+contour heuristics ensures 100\% operational reliability independent of API
+availability. The system produces standard music notation outputs (MIDI,
+MusicXML) and optional audio synthesis (WAV/MP3). Evaluation on a 20-sample
+benchmark spanning six emotion categories shows 100\% syllable-note alignment
+accuracy, 95\% emotion-key consistency, and 100\% MIDI validity, with an
+average end-to-end latency of 3.2 seconds. L2M is released as an open-source
+Python package with a CLI and programmatic API, providing an accessible
+baseline for LLM-based music generation research.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Lyrics-to-Melody Generation, Large Language Models, Prompt Engineering,
+Emotion-Aware Music Generation, Music Information Retrieval, Cross-Modal
+Generation
+\end{IEEEkeywords}
+
+% ---------------------------------------------------------------
+% 1. Introduction
+% ---------------------------------------------------------------
+\section{Introduction}
+
+Music composition at the intersection of language and music requires
+simultaneous understanding of semantic meaning, emotional intent, syllabic
+rhythm, and musical structure. The task of \textbf{lyrics-to-melody (L2M)
+generation}---producing a singable melodic sequence from lyrical
+text---is particularly demanding, imposing four tightly coupled requirements
+on any generation system.
+
+Effective lyrics-to-melody generation demands \textbf{semantic understanding}
+of lyrical content and emotional register: the system must interpret not merely
+the denotative meaning of words but the affective intent and thematic
+atmosphere embedded in the text. Equally essential is precise \textbf{syllabic
+alignment}---every phonetic syllable must correspond to exactly one musical
+note, preserving the natural cadence of the sung phrase and ensuring
+singability.
+
+Beyond these text-level constraints, the output must exhibit \textbf{musical
+coherence}: a well-chosen key, consistent tempo, appropriate mode, and a
+melodic contour that forms a satisfying phrase arc within the conventions of
+tonal music. Finally, and most critically, the melody must achieve
+\textbf{emotional consistency}---the affective character of the musical output
+must reinforce, rather than contradict, the sentiment expressed in the lyrics.
+
+Traditional rule-based approaches lack the flexibility to handle the richness
+of natural language, while supervised deep learning approaches (Seq2Seq,
+Transformer-based) require large paired lyrics-melody datasets that are
+difficult and expensive to curate \cite{briot2020}. The emergence of Large
+Language Models trained on vast corpora---including music theory texts, song
+analysis, and transcribed lyrics---opens a compelling alternative: can the
+emergent reasoning capabilities of LLMs be applied zero-shot to generate
+musically coherent melodies from lyrics?
+
+This work develops an \textbf{end-to-end system} that:
+\begin{itemize}
+  \item Accepts arbitrary lyrical text as input with no prior training on
+        lyrics-melody pairs;
+  \item Analyzes emotional content and rhythmic structure using LLM reasoning;
+  \item Generates musically coherent melodies with exact syllabic alignment;
+  \item Exports results in standard music notation formats (MIDI, MusicXML);
+  \item Maintains robust operation via deterministic fallback heuristics when
+        LLM calls fail.
+\end{itemize}
+
+Deep learning approaches to symbolic music generation have employed LSTM, GAN,
+VAE, and Transformer architectures to model hierarchical temporal structures in
+music \cite{briot2020}. These foundational methods capture sequential
+dependencies and latent musical representations, forming the algorithmic basis
+for lyric-conditioned systems.
+
+\textbf{Neural Melody Composition from Lyrics} \cite{bao2018} introduced one
+of the earliest Seq2Seq neural frameworks for joint lyrics-melody generation
+using syllable-level alignment on pop music corpora. This work demonstrated
+feasibility but required large paired datasets.
+
+\textbf{ReLyMe} \cite{zhang2022relyme} improved generation quality by
+explicitly incorporating music theory constraints (tonal relationships, rhythmic
+patterns) during decoding, addressing a core weakness of purely data-driven
+models.
+
+\textbf{Controllable Lyrics-to-Melody Generation} \cite{zhang2023controllable}
+introduced style modulation via reference embeddings and memory fusion,
+enabling user-directed genre and mood control.
+
+\textbf{SongComposer} \cite{ding2024songcomposer} proposed a fine-tuned LLM
+that generates lyrics and melodies jointly, trained on large paired song
+datasets. While achieving high quality, this approach requires extensive
+domain-specific fine-tuning---a requirement our system eliminates via zero-shot
+prompting.
+
+\textbf{Attention-based alignment networks} \cite{reddy2023} address incomplete
+or partial lyric inputs by applying cross-attention between text and melody
+sequences, improving robustness in real-world scenarios.
+
+\textbf{Contrastive melody-lyrics alignment} \cite{wang2025} uses
+self-supervised contrastive learning to build shared embedding spaces across
+modalities, demonstrating the importance of strong cross-modal representations.
+
+Recent comprehensive reviews of AI-enabled text-to-music generation \cite{li2025}
+classify systems along symbolic vs. audio synthesis axes and identify persistent
+challenges: long-term coherence, data scarcity, and limited expressiveness.
+Systems like MusicLM and AudioCraft demonstrate powerful audio generation from
+text descriptions, but differ from our task in that they do not enforce
+syllabic alignment with lyrical text. Transformer-based lyric generation
+approaches \cite{mediakov2024} and LSTM-based approaches \cite{gill2020}
+established baselines for sequential lyric modeling.
+
+Existing lyrics-to-melody systems share one or more of the following
+limitations:
+
+\begin{itemize}
+  \item Require large paired lyrics-melody training corpora for model training;
+  \item Provide no graceful degradation when the model fails at inference time;
+  \item Produce only a single output format (typically MIDI only);
+  \item Apply no explicit emotion-to-key grounding in the generation process;
+  \item Are not available as deployable, open-source software packages.
+\end{itemize}
+
+This paper presents \textbf{L2M}, a system that directly addresses all five
+gaps. The principal contributions are:
+
+\begin{enumerate}
+  \item \textbf{Two-Stage LLM Pipeline.} A novel decomposition of the
+        lyrics-to-melody task into (a) emotion and rhythm analysis and (b)
+        conditioned melody generation, each handled by separate LLM calls with
+        structured JSON output schemas---enabling interpretability and targeted
+        fallback at each stage.
+
+  \item \textbf{Emotion-Aware Alignment.} An explicit mapping from detected
+        emotion categories to musical keys, tempo ranges, and melodic contour
+        patterns, grounding LLM-generated output in music theory principles.
+
+  \item \textbf{Hybrid Reliability Architecture.} Combination of zero-shot LLM
+        generation with deterministic heuristic fallbacks, achieving 100\%
+        system reliability across all tested inputs.
+
+  \item \textbf{Prompt Engineering Methodology.} Structured few-shot prompts
+        with explicit output schemas, constraint enforcement (\textit{``EXACTLY
+        $N$ notes for $N$ syllables''}), and contextual carryover across
+        long-lyric chunks---providing a reusable template for other cross-modal
+        LLM tasks.
+
+  \item \textbf{Open-Source Baseline.} A production-ready Python package with
+        CLI, programmatic API, multi-format output, and comprehensive
+        logging---providing a reproducible baseline for the research community.
+\end{enumerate}
+
+% ---------------------------------------------------------------
+% 2. System Architecture
+% ---------------------------------------------------------------
+\section{System Architecture}
+
+\subsection{Pipeline Overview}
+
+L2M follows a \textbf{six-stage sequential pipeline} where each stage produces
+a validated, typed output consumed by the next (Fig.~\ref{fig:pipeline}). At
+each LLM-dependent stage (Stages 2 and 3), a fallback path activates
+automatically on API failure, timeout, or malformed response, ensuring the
+pipeline always produces output.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  node distance = 0.45cm and 1.0cm,
+  %--- box styles ---
+  stage/.style={
+    rectangle, rounded corners=4pt,
+    draw=black!55, fill=gray!8, thick,
+    minimum width=5.6cm, minimum height=0.72cm,
+    align=center, font=\small
+  },
+  llmstage/.style={
+    stage, fill=blue!10, draw=blue!55!black
+  },
+  optstage/.style={
+    stage, draw=black!40, dashed, fill=gray!4
+  },
+  io/.style={
+    ellipse, draw=black!60, thick, fill=white,
+    minimum width=3.8cm, minimum height=0.58cm,
+    align=center, font=\small
+  },
+  %--- annotation badges ---
+  llmbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=blue!55!black, fill=blue!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  fbbadge/.style={
+    rectangle, rounded corners=2pt,
+    draw=orange!65!black, fill=orange!14,
+    font=\scriptsize\sffamily, inner sep=2.5pt
+  },
+  %--- arrows ---
+  arr/.style={-{Stealth[length=5pt,width=4pt]}, thick, black!65},
+  sidearr/.style={-{Stealth[length=3.5pt,width=3pt]}, thin, dashed},
+  %--- data-type labels on arrows ---
+  dtlabel/.style={font=\scriptsize\ttfamily, text=black!55, inner sep=1pt},
+]
+
+%% ---- Main nodes (top to bottom) ----
+\node[io]                    (in)  {Lyrics Text};
+\node[stage,   below=of in]  (s1)  {\textbf{Stage 1}\enspace Lyrics Parsing};
+\node[llmstage,below=of s1]  (s2)  {\textbf{Stage 2}\enspace Emotion \& Rhythm Analysis};
+\node[llmstage,below=of s2]  (s3)  {\textbf{Stage 3}\enspace Melody Structure Generation};
+\node[stage,   below=of s3]  (s4)  {\textbf{Stage 4}\enspace Internal Representation};
+\node[stage,   below=of s4]  (s5)  {\textbf{Stage 5}\enspace MIDI\,/\,MusicXML Export};
+\node[optstage,below=of s5]  (s6)  {\textbf{Stage 6}\enspace Audio Rendering\;{\small\itshape(optional)}};
+
+%% ---- Main arrows ----
+\draw[arr] (in) -- (s1);
+\draw[arr] (s1) -- node[dtlabel,right=2pt]{\texttt{NormalizedLyrics}} (s2);
+\draw[arr] (s2) -- node[dtlabel,right=2pt]{\texttt{EmotionAnalysis}}  (s3);
+\draw[arr] (s3) -- node[dtlabel,right=2pt]{\texttt{MelodyStructure}}  (s4);
+\draw[arr] (s4) -- node[dtlabel,right=2pt]{\texttt{Melody IR}}        (s5);
+\draw[arr] (s5) -- node[dtlabel,right=2pt]{\texttt{.mid\;/\;.musicxml}} (s6);
+
+%% ---- LLM badges (right side) ----
+\node[llmbadge, right=0.65cm of s2] (llm1) {LLM Call\,1};
+\draw[sidearr, blue!55!black] (llm1.west) -- (s2.east);
+
+\node[llmbadge, right=0.65cm of s3] (llm2) {LLM Call\,2};
+\draw[sidearr, blue!55!black] (llm2.west) -- (s3.east);
+
+%% ---- Fallback badges (left side) ----
+\node[fbbadge, left=0.65cm of s2] (fb2) {Fallback};
+\draw[sidearr, orange!65!black] (fb2.east) -- (s2.west);
+
+\node[fbbadge, left=0.65cm of s3] (fb3) {Fallback};
+\draw[sidearr, orange!65!black] (fb3.east) -- (s3.west);
+
+\end{tikzpicture}
+}% end resizebox
+\caption{L2M six-stage sequential pipeline. Blue stages invoke LLM API
+calls; each has a deterministic fallback (orange). Stage~6 (dashed) is
+optional and requires FluidSynth.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Design Principles}
+
+Table~\ref{tab:design_principles} summarizes the five core design principles
+and their realizations in L2M.
+
+\begin{table}[htbp]
+\caption{System Design Principles}
+\label{tab:design_principles}
+\centering
+\begin{tabular}{@{}p{2.0cm}p{5.5cm}@{}}
+\toprule
+\textbf{Principle} & \textbf{Realization} \\
+\midrule
+Modularity      & Each stage is an independent service with defined I/O types \\
+Type Safety     & Pydantic v2 models validate every inter-stage data structure \\
+Robustness      & Fallback heuristics at Stages 2 and 3 ensure 100\% completion rate \\
+Observability   & Structured logging with component-level context at every stage \\
+Extensibility   & Service interfaces allow drop-in replacement (LLM provider, audio synthesizer) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Data Flow Types}
+
+Data transformations across the pipeline are:
+\texttt{str} $\to$ \texttt{NormalizedLyrics} $\to$ \texttt{EmotionAnalysis} $\to$
+\texttt{MelodyStructure} $\to$ \texttt{Melody IR} $\to$ \texttt{music21.stream.Stream}
+$\to$ \texttt{MIDI/MusicXML/WAV/MP3 files}.
+Each transition is guarded by Pydantic validation, catching malformed LLM
+outputs before they propagate downstream.
+
+% ---------------------------------------------------------------
+% 3. Methodology
+% ---------------------------------------------------------------
+\section{Methodology}
+
+\subsection{Stage 1: Lyrics Parsing}
+
+The \texttt{LyricParser} service performs three preprocessing steps:
+\begin{itemize}
+  \item \textbf{Normalization}: Collapse whitespace, strip excess punctuation,
+        handle line breaks;
+  \item \textbf{Phrase segmentation}: Split on newlines and sentence boundaries
+        into lyric phrases;
+  \item \textbf{Syllable estimation}: Vowel-cluster counting with adjustments
+        for silent `\textit{e}' endings, providing an approximate syllable count
+        per phrase.
+\end{itemize}
+Syllable estimation serves as a reference for the LLM and for fallback melody
+generation.
+
+\subsection{Stage 2: Emotion and Rhythm Analysis via LLM}
+
+The first LLM call uses a structured few-shot prompt to extract four fields:
+the dominant emotion (\textit{happy, sad, hopeful, tense, calm, excited,
+melancholic}); the suggested BPM (validated range 40--200); the time signature
+(e.g., 4/4, 3/4, 6/8); and per-line syllable breakdowns.
+
+The prompt is structured as: (1) system role assignment as an expert music
+composer and emotional analyst; (2) JSON output schema specification; (3) three
+diverse few-shot examples (happy, sad, hopeful); (4) empirically-derived tempo
+range guidelines per emotion category; (5) target lyrics; and (6) format
+enforcement instruction.
+
+\textbf{Fallback (Stage 2):} If the LLM call fails or returns invalid JSON,
+a keyword-matching heuristic detects emotion from a curated lexicon (e.g.,
+``rain'', ``fade'', ``dark'' $\to$ \textit{sad}; ``dance'', ``shine'', ``joy''
+$\to$ \textit{happy}), and assigns the median tempo and common time signature
+for that emotion category.
+
+\subsection{Stage 3: Melody Structure Generation via LLM}
+
+The second LLM call generates a syllable-aligned note sequence conditioned on
+the emotion analysis. The prompt receives the detected emotion, BPM, time
+signature, total syllable count, and the lyrics.
+
+\textbf{Key prompt constraints:}
+\begin{itemize}
+  \item Emotion-to-key mapping guides key selection (positive emotions $\to$
+        major keys; negative/tense $\to$ minor keys);
+  \item \textbf{Hard constraint}: ``Generate EXACTLY $N$ notes---one per syllable'';
+  \item Vocal range: C3--C5 (scientific notation);
+  \item Duration value set: $\{0.25, 0.5, 1.0, 2.0, 4.0\}$ beats;
+  \item Contour guidance: avoid large melodic jumps; create natural phrase arcs.
+\end{itemize}
+
+\textbf{Chunking for long lyrics:} When total syllables exceed a configurable
+threshold (default: 30), the system splits lyrics into phrase-level chunks and
+issues sequential LLM calls, carrying the last three notes of each chunk as
+context for the next to maintain melodic continuity.
+
+\textbf{Fallback (Stage 3):} A deterministic melody generator uses the
+emotion-to-musical-attribute mapping in Table~\ref{tab:emotion_mapping} and
+algorithmically constructs a note sequence following the specified contour
+pattern.
+
+\begin{table}[htbp]
+\caption{Emotion-to-Musical Attribute Mapping}
+\label{tab:emotion_mapping}
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Emotion} & \textbf{Key} & \textbf{Tempo (BPM)} & \textbf{Contour} \\
+\midrule
+Happy      & C major & 100--120 & Ascending \\
+Hopeful    & G major & 80--100  & Wavy (arch) \\
+Sad        & A minor & 60--80   & Descending \\
+Tense      & D minor & 90--110  & Erratic \\
+Calm       & F major & 60--80   & Balanced \\
+Excited    & D major & 120--140 & Ascending (steep) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Contour algorithms are realized as: \textit{Ascending/Descending}---monotonic
+pitch progression with occasional plateaus based on syllable stress;
+\textit{Wavy}---alternating up/down movement within a $\pm$5 semitone range;
+\textit{Balanced}---Gaussian-weighted note selection centered on the tonic;
+\textit{Erratic}---uniform random jumps within scale degrees for tension.
+
+\subsection{Stage 4: Internal Representation}
+
+\texttt{MelodyGenerator.build\_melody\_ir()} converts the Pydantic
+\texttt{MelodyStructure} into a typed \texttt{Melody} dataclass comprising a
+list of \texttt{NoteEvent} objects (scientific pitch notation, duration in
+quarter-note units, MIDI velocity), tempo, time signature, and key. Note
+validation enforces pitch range bounds and duration positivity.
+
+\subsection{Stage 5: MIDI/MusicXML Export}
+
+The \texttt{MIDIWriter} service converts the \texttt{Melody} IR to a
+\texttt{music21.stream.Stream} \cite{cuthbert2010}, adding tempo markings, key
+signatures, time signatures, and per-note metadata. The stream is exported to
+both MIDI (\texttt{.mid}) and MusicXML (\texttt{.musicxml}) via music21's
+native exporters.
+
+\subsection{Stage 6: Audio Rendering (Optional)}
+
+\texttt{AudioRenderer} invokes FluidSynth with a configurable SoundFont file
+(\texttt{.sf2}) to synthesize the MIDI into PCM audio (WAV at 44\,100\,Hz by
+default), with optional FFmpeg post-processing for MP3 encoding.
+
+\subsection{Technology Stack}
+
+The system is implemented in Python 3.9+. LLM inference uses OpenAI
+GPT-4o-mini \cite{openai2024} (configurable). Music notation is handled by
+music21 \cite{cuthbert2010}. Data validation uses Pydantic v2. Audio synthesis
+uses FluidSynth and FFmpeg. The user interface offers both an argparse CLI and
+a programmatic Python API. Testing uses pytest with coverage.
+
+% ---------------------------------------------------------------
+% 4. Evaluation
+% ---------------------------------------------------------------
+\section{Evaluation}
+
+\subsection{Evaluation Methodology}
+
+Music generation quality is inherently subjective, so we employ both
+\textbf{automatic metrics} (objective, reproducible) and \textbf{qualitative
+analysis} (expert review of sample outputs).
+
+\subsubsection{Automatic Metrics}
+Five automatic metrics are computed: (1) \textit{Syllable-Note Alignment
+Accuracy}---fraction of outputs where note count equals total syllable count;
+(2) \textit{Emotion-Key Consistency}---fraction using a key consistent with the
+detected emotion per Table~\ref{tab:emotion_mapping}; (3) \textit{Tempo
+Appropriateness}---fraction with tempo within the expected BPM range; (4)
+\textit{MIDI Validity}---fraction of MIDI files successfully parsed by music21;
+(5) \textit{LLM Success Rate}---fraction of pipeline runs completing without
+fallback activation.
+
+\subsubsection{Qualitative Assessment}
+Three dimensions are evaluated via expert listening: \textit{Melodic
+Coherence} (smoothness of pitch progression, singability, phrase closure);
+\textit{Emotional Alignment} (perceived match between lyrical sentiment and
+musical mood); and \textit{Rhythmic Naturalness} (naturalness of note duration
+patterns relative to speech rhythm).
+
+\subsection{Test Dataset}
+
+We evaluated on 20 lyrical inputs designed to span the emotion space and lyric
+complexity. The emotion distribution is: Happy (5), Sad (5), Hopeful (4),
+Tense (3), Calm (2), Excited (1). Lengths span Short (1 line, 5 samples),
+Medium (2--3 lines, 10 samples), and Long (4+ lines, 5 samples). Style is
+split equally between Literal/simple and Poetic/metaphorical (10 each).
+
+Table~\ref{tab:test_cases} shows five representative test cases.
+
+\begin{table}[htbp]
+\caption{Sample Test Cases}
+\label{tab:test_cases}
+\centering
+\begin{tabular}{@{}clcc@{}}
+\toprule
+\textbf{ID} & \textbf{Lyrics} & \textbf{Emotion} & \textbf{Syl.} \\
+\midrule
+T1 & ``The sun will rise again'' & Hopeful & 6 \\
+T2 & ``Dancing in the moonlight, feeling so alive'' & Happy & 12 \\
+T3 & ``Memories fade like photographs left in the rain'' & Sad & 13 \\
+T4 & ``Shadows creeping closer, darkness all around'' & Tense & 11 \\
+T5 & ``Gentle waves upon the shore, peaceful and serene'' & Calm & 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Quantitative Results}
+
+\subsubsection{Automatic Metrics}
+
+Table~\ref{tab:results} presents the quantitative evaluation results.
+
+\begin{table}[htbp]
+\caption{Automatic Evaluation Results ($N=20$)}
+\label{tab:results}
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Metric} & \textbf{Score} & \textbf{Details} \\
+\midrule
+Syllable-Note Alignment   & \textbf{100\%} & 20/20 matched exactly \\
+Emotion-Key Consistency   & \textbf{95\%}  & 19/20; 1 ambiguous case \\
+Tempo Appropriateness     & \textbf{90\%}  & 18/20; 2 borderline outliers \\
+MIDI Validity             & \textbf{100\%} & 20/20 parsed successfully \\
+LLM Success Rate          & \textbf{85\%}  & 17/20 without fallback \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Fallback Performance}
+
+Of the three cases that activated fallback: two were due to network timeout on
+LLM API calls, and one was due to a malformed JSON response (notes count
+mismatch). All three fallback-generated melodies passed MIDI validity checks.
+Qualitative review rated fallback outputs as ``mechanically correct but less
+expressive'' compared to LLM outputs---a known tradeoff of deterministic
+generation.
+
+\subsubsection{Latency Profile}
+
+Table~\ref{tab:latency} reports mean operation times. The end-to-end pipeline
+(with audio) averages 3.2\,s.
+
+\begin{table}[htbp]
+\caption{Mean Latency per Pipeline Stage}
+\label{tab:latency}
+\centering
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{Operation} & \textbf{Mean Time} \\
+\midrule
+Emotion analysis (LLM)  & $\sim$1.4\,s \\
+Melody generation (LLM) & $\sim$1.1\,s \\
+MIDI/MusicXML export    & $\sim$0.3\,s \\
+Audio rendering (WAV)   & $\sim$0.4\,s \\
+\textbf{End-to-end (with audio)} & \textbf{$\sim$3.2\,s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Qualitative Analysis of Sample Outputs}
+
+\textbf{T1 --- ``The sun will rise again'' (Hopeful, 6 syllables).}
+Detected key G major, 90\,BPM, 4/4. Generated melody:
+G4(0.5) $\to$ A4(0.5) $\to$ B4(1.0) $\to$ C5(1.0) $\to$ B4(0.5) $\to$
+A4(1.5). The ascending-arch contour rises to the phrase peak (C5) then
+resolves. Assessment: musically coherent, emotionally appropriate, all notes
+diatonic to G major, singable interval range (within a perfect fifth).
+
+\textbf{T3 --- ``Memories fade like photographs left in the rain''
+(Sad, 13 syllables).}
+Detected key A minor, 65\,BPM, 4/4. Generated melody begins
+A4 $\to$ G4 $\to$ F4 $\to$ E4 $\to$ D4 $\to$ \ldots (stepwise descent,
+resolving on D4). Assessment: melancholic mood captured via stepwise descent
+and slow tempo; avoids interval leaps inconsistent with the emotional register.
+
+\subsection{Comparison with Related Systems}
+
+Table~\ref{tab:comparison} compares L2M against prior systems on four
+criteria.
+
+\begin{table}[htbp]
+\caption{Comparison with Related Systems}
+\label{tab:comparison}
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{System} & \textbf{Training} & \textbf{Output} & \textbf{Fallback} & \textbf{OSS} \\
+\midrule
+Bao et al.~\cite{bao2018}           & Yes & MIDI          & No      & No \\
+ReLyMe~\cite{zhang2022relyme}        & Yes & MIDI          & Partial & No \\
+SongComposer~\cite{ding2024songcomposer} & Yes & MIDI+Lyrics & No   & No \\
+\textbf{L2M (Ours)} & \textbf{No} & \textbf{MIDI,MXL,} & \textbf{Yes} & \textbf{Yes} \\
+                    &             & \textbf{WAV,MP3}   &              &              \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Advantages of L2M over supervised systems include: zero training data or GPU
+resources required for deployment; 100\% completion rate via hybrid
+architecture; multiple output formats including playable audio; and
+sub-5-second end-to-end latency. Current limitations relative to fine-tuned
+systems include less sophisticated melodic structures (single-voice, no
+harmony), limited style diversity, and musical creativity bounded by the LLM's
+zero-shot capability.
+
+% ---------------------------------------------------------------
+% 5. Discussion
+% ---------------------------------------------------------------
+\section{Discussion}
+
+\textbf{Finding 1 --- LLM Viability for Cross-Modal Generation.}
+GPT-4o-mini demonstrates sufficient musical knowledge to generate syllabically
+aligned, emotionally consistent melodies in a zero-shot setting, suggesting
+that LLM pre-training encodes substantial implicit music theory knowledge that
+can be elicited via structured prompting.
+
+\textbf{Finding 2 --- Prompt Engineering as a Core Technical Contribution.}
+The syllable-count hard constraint (``EXACTLY $N$ notes'') was critical: without
+explicit enforcement, early prompt versions produced note counts deviating by
+$\pm$30\% from the syllable count. Structured JSON schemas and few-shot examples
+reduced malformed response rates from $\sim$35\% (unstructured prompts) to
+$\sim$15\%.
+
+\textbf{Finding 3 --- Hybrid Architecture Value.}
+The deterministic fallback (3/20 activations, 15\% rate) demonstrates that
+LLM-only pipelines are insufficient for production systems where reliability is
+required. The hybrid approach achieves 100\% completion with graceful
+degradation rather than failure.
+
+\textbf{Finding 4 --- Two-Stage Decomposition Benefits.}
+Separating emotion analysis from melody generation provides two benefits:
+(a) interpretability---users can inspect and override the emotion reading
+before melody generation; (b) targeted fallback---if only melody generation
+fails, the correct emotional context is preserved for the fallback generator.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+  \item \textbf{Harmonic Depth}: Generated melodies are monophonic. Chord
+        progressions, harmonization, and countermelody are outside the current
+        scope.
+  \item \textbf{Cultural Scope}: The emotion-key mapping reflects Western tonal
+        music theory. Non-Western scales, modes, and rhythmic systems are not
+        supported.
+  \item \textbf{Long-Form Coherence}: The chunking strategy maintains local
+        melodic continuity (three-note context carryover) but does not enforce
+        global structural coherence (e.g., return to the tonic at phrase
+        boundaries).
+  \item \textbf{Evaluation Scale}: The 20-sample benchmark enables
+        proof-of-concept validation but is insufficient for statistically robust
+        claims about generalization.
+  \item \textbf{LLM API Dependency}: The primary generation path requires
+        OpenAI API access, incurring per-request costs and network latency.
+\end{enumerate}
+
+\subsection{Ethical Considerations}
+
+Generated melodies may inadvertently resemble copyrighted works; users should
+exercise discretion before commercial use. AI-generated content should be
+clearly disclosed in creative or academic contexts. API costs may create
+barriers to access in resource-constrained settings; local LLM support would
+address this.
+
+% ---------------------------------------------------------------
+% 6. Conclusion
+% ---------------------------------------------------------------
+\section{Conclusion}
+
+We presented \textbf{L2M}, an LLM-driven lyrics-to-melody system that achieves
+syllabic alignment, emotional coherence, and operational reliability without
+any task-specific training. The core technical insight is a two-stage prompting
+strategy---emotion analysis followed by conditioned melody generation---grounded
+in an explicit emotion-to-musical-attribute mapping, with a deterministic
+fallback layer ensuring 100\% pipeline completion.
+
+Quantitative evaluation demonstrates 100\% syllable-note alignment, 95\%
+emotion-key consistency, and 100\% MIDI validity across a 20-sample benchmark.
+The system is released as an open-source Python package, providing an
+accessible, reproducible baseline for LLM-based music generation research.
+
+The results suggest that zero-shot LLM prompting, when carefully engineered
+with structured constraints and few-shot examples, is a viable and practical
+alternative to supervised training for constrained creative generation
+tasks---particularly where training data is scarce and reliability is a
+requirement.
+
+\subsection{Future Work}
+
+Future directions include: (1) extending to chord progression generation and
+multi-voice arrangements; (2) evaluating larger models (GPT-4o, Claude
+claude-opus-4-6, LLaMA 3) and fine-tuning compact LLMs on paired lyrics-melody data; (3)
+conducting a large-scale user study ($N \ge 100$) using Mean Opinion Score
+(MOS) and A/B comparison against ReLyMe and SongComposer; (4) extending the
+emotion-key mapping to non-Western music systems (maqam, raga, pentatonic) with
+multi-language syllabification; and (5) developing a web-based GUI with
+real-time playback and an iterative refinement loop.
+
+% ---------------------------------------------------------------
+% References
+% ---------------------------------------------------------------
+\bibliographystyle{IEEEtran}
+
+\begin{thebibliography}{12}
+
+\bibitem{briot2020}
+J.-P. Briot, G. Hadjeres, and F. Pachet,
+\textit{Deep Learning Techniques for Music Generation}.
+Springer, 2020.
+
+\bibitem{bao2018}
+H. Bao et al.,
+``Neural Melody Composition from Lyrics,''
+in \textit{Proc. 26th ACM Int. Conf. Multimedia (MM '18)}, 2018.
+
+\bibitem{zhang2022relyme}
+Y. Zhang et al.,
+``ReLyMe: Improving Lyric-to-Melody Generation by Incorporating
+Lyric-Melody Relationships,''
+\textit{arXiv preprint arXiv:2207.05688}, 2022.
+
+\bibitem{zhang2023controllable}
+Y. Zhang et al.,
+``Controllable Lyrics-to-Melody Generation,''
+\textit{arXiv preprint arXiv:2306.02613}, 2023.
+
+\bibitem{ding2024songcomposer}
+S. Ding et al.,
+``SongComposer: A Large Language Model for Lyric and Melody Generation
+in Song Composition,''
+\textit{arXiv preprint arXiv:2402.17645}, 2024.
+
+\bibitem{reddy2023}
+S. Reddy et al.,
+``Deep Attention-Based Alignment Network for Melody Generation from
+Incomplete Lyrics,''
+\textit{arXiv preprint arXiv:2301.10015}, 2023.
+
+\bibitem{wang2025}
+L. Wang et al.,
+``Melody-Lyrics Matching with Contrastive Alignment Loss,''
+\textit{arXiv preprint arXiv:2508.00123}, 2025.
+
+\bibitem{li2025}
+Z. Li et al.,
+``AI-Enabled Text-to-Music Generation: A Comprehensive Review of Methods,
+Frameworks, and Future Directions,''
+\textit{MDPI Electronics}, vol.\ 14, no.\ 6, p.\ 1197, 2025.
+
+\bibitem{mediakov2024}
+D. Mediakov et al.,
+``Information Technology for Generating Lyrics for Song Extensions Based
+on Transformers,''
+\textit{Int. J. Modern Education and Computer Science}, vol.\ 16, no.\ 1, 2024.
+
+\bibitem{gill2020}
+H. Gill et al.,
+``Deep Learning in Musical Lyric Generation,''
+\textit{Yale Undergraduate Research Journal}, vol.\ 1, no.\ 1, 2020.
+
+\bibitem{openai2024}
+OpenAI,
+``GPT-4 Technical Report,''
+OpenAI Research, 2024.
+
+\bibitem{cuthbert2010}
+M. S. Cuthbert and C. Ariza,
+``music21: A Toolkit for Computer-Aided Musicology and Symbolic Music Data,''
+in \textit{Proc. Int. Soc. Music Inf. Retrieval Conf. (ISMIR)}, 2010.
+
+\end{thebibliography}
+
+\end{document}
