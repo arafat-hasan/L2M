@@ -7,7 +7,7 @@ color: #333
 ---
 
 <!-- 
-L2M Thesis Defense Presentation
+L2M Project Defense Presentation
 -->
 
 ---

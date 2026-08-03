@@ -1,10 +1,10 @@
-# L2M Thesis Defense Presentation
+# L2M Project Defense Presentation
 
-This directory contains presentation materials for the L2M thesis defense.
+This directory contains presentation materials for the L2M M.Engg. project defense.
 
 ## Files
 
-- **`project_documentation.md`** - Full thesis documentation in journal article format
+- **`project_documentation.md`** - Full project documentation in journal article format
 - **`presentation_slides.md`** - Presentation slides (23 slides)
 
 ## Presentation Slides

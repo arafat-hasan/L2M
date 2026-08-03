@@ -1,7 +1,7 @@
-# L2M Thesis
+# L2M Project Report
 
-Thesis defense document for **L2M: An LLM-Driven Lyrics-to-Melody Generation
-System with Emotion-Aware Alignment**, in the format of
+M.Engg. project defense document for **L2M: An LLM-Driven Lyrics-to-Melody
+Generation System with Emotion-Aware Alignment**, in the format of
 [arafat-hasan/undergraduate-thesis](https://github.com/arafat-hasan/undergraduate-thesis)
 (Dept. of CSE, MBSTU).
 

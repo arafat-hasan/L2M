@@ -1,4 +1,4 @@
-# Makefile for the L2M thesis
+# Makefile for the L2M M.Engg. project report
 #
 #   make            build main.pdf
 #   make watch      rebuild continuously on file changes
