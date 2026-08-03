@@ -25,7 +25,7 @@ L2M Thesis Defense Presentation
 **Md Arafat Hasan Jenin**  
 Student ID: CE-210926
 
-*M.Eng. Project Defense*
+*M.Engg. Project Defense*
 
 Supervisor: **Professor Dr. Mohammad Motiur Rahman**
 
