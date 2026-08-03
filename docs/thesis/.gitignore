@@ -1,0 +1,24 @@
+# latexmk out-of-tree build directory
+build/
+
+# stray artifacts from a flat `make manual` run
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.nlo
+*.nls
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+# main.pdf is tracked deliberately, so nothing here excludes it

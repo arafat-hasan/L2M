@@ -22,7 +22,7 @@ L2M Thesis Defense Presentation
 
 <br/>
 
-**Arafat Hasan**  
+**Md Arafat Hasan Jenin**  
 Student ID: CE-210926
 
 *M.Eng. Project Defense*
