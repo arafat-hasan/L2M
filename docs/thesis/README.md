@@ -43,7 +43,5 @@ make TEXBIN=/usr/local/texlive/2025/bin/x86_64-linux
 
 ## Placeholders to update before submission
 
-- Student ID on title page / approval / declaration (currently `CE-210926`)
 - Submission month/year (currently August 2026)
 - Evaluation committee names in `evaluation.tex`
-- Chairman name in `approval.tex`
