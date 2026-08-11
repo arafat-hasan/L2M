@@ -22,12 +22,14 @@ Returning to the research questions of \Autoref{chap:intro}: a
 general-purpose LLM \emph{can} generate structurally valid, emotionally
 consistent melodies zero-shot when its output is constrained by structured
 prompts and typed validation (RQ1); two-stage decomposition improves both
-interpretability and fallback precision (RQ2); a deterministic
+interpretability and fallback precision (RQ2); an explicit
+emotion-to-musical-attribute mapping grounds the output well enough to reach
+95\% emotion--key consistency (RQ3); a deterministic
 music-theory-grounded fallback converts a 15\% LLM failure rate into a 100\%
-system completion rate at an acceptable quality cost (RQ3); and hard
+system completion rate at an acceptable quality cost (RQ4); and hard
 constraints, output schemas, and few-shot examples are the prompt
 engineering techniques that make the difference between unusable and
-reliable output (RQ4). More broadly, the results suggest that zero-shot LLM
+reliable output (RQ5). More broadly, the results suggest that zero-shot LLM
 prompting, carefully engineered with structured constraints, is a viable and
 practical alternative to supervised training for constrained creative
 generation tasks --- particularly where training data is scarce and

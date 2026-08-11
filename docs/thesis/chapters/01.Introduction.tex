@@ -80,13 +80,16 @@ This project addresses the following research questions:
     structured prompts, generate melodies that satisfy exact syllable--note
     alignment and basic tonal coherence, without any task-specific training?
     \item[\textbf{RQ2.}] Does decomposing the task into two stages ---
-    emotion/rhythm analysis followed by conditioned melody generation ---
+    emotion and rhythm analysis followed by conditioned melody generation ---
     improve controllability and interpretability over a single monolithic
     generation step?
-    \item[\textbf{RQ3.}] Can a deterministic, music-theory-grounded fallback
+    \item[\textbf{RQ3.}] Can an explicit mapping from emotion categories to
+    musical attributes ground the generated melody so that its affective
+    character is consistent with the sentiment of the lyrics?
+    \item[\textbf{RQ4.}] Can a deterministic, music-theory-grounded fallback
     mechanism guarantee full operational reliability while preserving
     acceptable musical quality when the LLM path fails?
-    \item[\textbf{RQ4.}] Which prompt engineering techniques (output schemas,
+    \item[\textbf{RQ5.}] Which prompt engineering techniques (output schemas,
     hard constraints, few-shot examples, contextual carryover) are necessary
     to make LLM output usable in a strictly validated music pipeline?
 \end{itemize}
@@ -94,23 +97,26 @@ This project addresses the following research questions:
 \section{Objectives}
 \label{sec:objectives}
 
-The concrete objectives of this work are to:
+Each research question above is addressed by the correspondingly numbered
+objective below. The concrete objectives of this work are to:
 
 \begin{enumerate}
     \item Design an end-to-end pipeline that accepts arbitrary lyrical text
-    and produces standard music notation (MIDI, MusicXML) and optional
+    and, without any task-specific training, produces syllable-aligned
+    melodies as standard music notation (MIDI, MusicXML) and optional
     synthesized audio (WAV/MP3);
-    \item Develop a two-stage LLM prompting strategy for emotion analysis
-    and syllable-aligned melody generation, with structured JSON output
-    schemas validated at every stage;
+    \item Develop a two-stage LLM prompting strategy that separates emotion
+    and rhythm analysis from conditioned melody generation, with structured
+    JSON output schemas validated between the stages;
     \item Ground the generation process in music theory through an explicit
     mapping from emotion categories to musical keys, tempo ranges, and
     melodic contour patterns;
     \item Implement deterministic fallback heuristics that guarantee a valid
     output whenever an LLM call fails, times out, or returns malformed data;
-    \item Evaluate the system quantitatively and qualitatively on a benchmark
-    spanning six emotion categories, and release it as a documented,
-    open-source Python package.
+    \item Establish the prompt engineering techniques needed for reliable
+    structured output, and evaluate the resulting system quantitatively and
+    qualitatively on a benchmark spanning six emotion categories, releasing
+    it as a documented, open-source Python package.
 \end{enumerate}
 
 \section{Contributions}

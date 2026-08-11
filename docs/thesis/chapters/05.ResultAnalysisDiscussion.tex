@@ -210,8 +210,8 @@ LLM's zero-shot capability.
 \section{Discussion}
 \label{sec:ev-discussion}
 
-Four findings emerge from the evaluation, answering the research questions
-posed in \Autoref{chap:intro}.
+Five findings emerge from the evaluation, one for each of the research
+questions posed in \Autoref{chap:intro}.
 
 \textbf{Finding 1 --- LLM viability for cross-modal generation (RQ1).}
 GPT-4o-mini demonstrates sufficient musical knowledge to generate
@@ -219,42 +219,49 @@ syllabically aligned, emotionally consistent melodies in a zero-shot
 setting. This suggests that LLM pre-training encodes substantial implicit
 music theory knowledge that structured prompting can elicit.
 
-\textbf{Finding 2 --- Prompt engineering as a core technical contribution
-(RQ4).} The syllable-count hard constraint proved critical: without explicit
-enforcement, early prompt versions produced note counts deviating by
-$\pm30\%$ from the syllable count. Structured JSON schemas and few-shot
-examples reduced malformed response rates from roughly 35\% (unstructured
-prompts) to roughly 15\%.
-
-\textbf{Finding 3 --- Hybrid architecture value (RQ3).} The fallback
-activation rate of 15\% (3/20 runs) demonstrates that LLM-only pipelines are
-insufficient for production systems requiring reliability. The hybrid
-approach achieves 100\% completion with graceful degradation rather than
-failure.
-
-\textbf{Finding 4 --- Two-stage decomposition (RQ2).} Separating emotion
+\textbf{Finding 2 --- Two-stage decomposition (RQ2).} Separating emotion
 analysis from melody generation yields two benefits: \emph{interpretability}
 --- users can inspect and override the emotion reading before melody
 generation --- and \emph{targeted fallback} --- if only melody generation
 fails, the correct emotional context is preserved for the fallback
 generator.
 
+\textbf{Finding 3 --- Value of explicit emotion grounding (RQ3).} Supplying
+the emotion-to-musical-attribute mapping as prompt guidance yielded 95\%
+emotion--key consistency and 90\% tempo appropriateness, with the single
+inconsistent case arising from genuinely ambiguous mixed sentiment rather
+than from a mis-selected key. Grounding the model in an explicit table is
+therefore an effective substitute for learning affective conventions from
+paired data.
+
+\textbf{Finding 4 --- Hybrid architecture value (RQ4).} The fallback
+activation rate of 15\% (3/20 runs) demonstrates that LLM-only pipelines are
+insufficient for production systems requiring reliability. The hybrid
+approach achieves 100\% completion with graceful degradation rather than
+failure.
+
+\textbf{Finding 5 --- Prompt engineering as a core technical contribution
+(RQ5).} The syllable-count hard constraint proved critical: without explicit
+enforcement, early prompt versions produced note counts deviating by
+$\pm30\%$ from the syllable count. Structured JSON schemas and few-shot
+examples reduced malformed response rates from roughly 35\% (unstructured
+prompts) to roughly 15\%.
+
 \section{Limitations}
 \label{sec:ev-limitations}
 
-Five limitations bound the present work:
+Four limitations bound the present work:
 
 \begin{enumerate}
-    \item \textbf{Harmonic depth.} Generated melodies are monophonic; chord
-    progressions, harmonization, and countermelody are outside the current
-    scope.
+    \item \textbf{Musical scope.} Generated melodies are monophonic and
+    only locally coherent. Chord progressions, harmonization, and
+    countermelody are outside the current scope, and the chunking strategy
+    maintains local continuity through three-note context carryover without
+    enforcing global structure (e.g., a return to the tonic at phrase
+    boundaries).
     \item \textbf{Cultural scope.} The emotion--key mapping and contour
     algorithms reflect Western tonal music theory; non-Western scales,
     modes, and rhythmic systems are not supported.
-    \item \textbf{Long-form coherence.} The chunking strategy maintains
-    local melodic continuity via three-note context carryover but does not
-    enforce global structural coherence (e.g., return to the tonic at
-    phrase boundaries).
     \item \textbf{Evaluation scale.} The 20-sample benchmark enables
     proof-of-concept validation but is insufficient for statistically robust
     claims about generalization.
